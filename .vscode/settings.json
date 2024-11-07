@@ -1,0 +1,9 @@
+{
+	"Lua.diagnostics.disable": ["undefined-global"],
+	"Lua.runtime.special": {
+		"include": "require",
+		"IncludeCS": "require"
+	},
+	"Lua.runtime.nonstandardSymbol": ["continue", "&&", "||", "!=", "!", "//"],
+	"Lua.workspace.library": ["${addons}/garrysmod/module/library"]
+}
