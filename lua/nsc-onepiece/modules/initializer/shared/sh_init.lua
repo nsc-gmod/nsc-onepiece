@@ -10,7 +10,7 @@ CreateConVar("nsc_debug_debugmode", "0", { FCVAR_CHEAT, FCVAR_REPLICATED, FCVAR_
 NSCOP.Modules = {
 	Initializer = "initializer",
 	Utils = "utils",
-    CombatSystem = "combatsystem",
+	CombatSystem = "combatsystem",
 }
 
 ---Prints a message to the console with a [NSCOP] prefix

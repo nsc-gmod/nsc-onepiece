@@ -3,10 +3,8 @@
 
 if SERVER then
 	AddCSLuaFile("shared/sh_init.lua")
-	include("shared/sh_init.lua")
-else
-	include("shared/sh_init.lua")
 end
+include("shared/sh_init.lua")
 
 NSCOP.IncludeModule(NSCOP.Modules.Utils)
 NSCOP.IncludeModule(NSCOP.Modules.CombatSystem)
