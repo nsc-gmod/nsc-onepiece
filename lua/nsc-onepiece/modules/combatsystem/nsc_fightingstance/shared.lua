@@ -74,9 +74,9 @@ function FightingStance:Reload()
 end
 
 function FightingStance:Think()
-
 end
 
+-- TODO: Once skill system is implemented, this should be moved to a separate module, where it would have its own skill specification
 function FightingStance:Dodge()
 	if CurTime() < self:GetNextDodge() then return end
 
@@ -87,7 +87,12 @@ function FightingStance:Dodge()
 
 	local moveDirection = owner:GetMoveDirection(true)
 
-	owner:SetVelocity(moveDirection * self.DodgeForce)
+	-- Fixes an issue where there is a velocity hickup when the player is in air
+	if (moveDirection == vector_origin) then return end
+
+	-- I'm using SetLocalVelocity instead of SetVelocity, because SetVelocity is causing prediction errors
+	-- FIXME: For some reason, sometimes the player dodges a bit to the side, even though the moveDirection is correct
+	owner:SetLocalVelocity(moveDirection * self.DodgeForce)
 	NSCOP.Print("Player dodged", owner)
 
 	self:SetNextDodge(CurTime() + self.DodgeCD)
