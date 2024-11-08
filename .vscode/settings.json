@@ -1,5 +1,6 @@
 {
-	"Lua.diagnostics.disable": ["undefined-global"],
+	// "Lua.diagnostics.disable": ["undefined-global"],
+	"Lua.diagnostics.libraryFiles": "Disable",
 	"Lua.runtime.special": {
 		"include": "require",
 		"IncludeCS": "require"
