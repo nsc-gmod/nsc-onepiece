@@ -41,16 +41,30 @@ end
 ---@overload fun(eventName: "PlayerDisconnected", identifier: string, func: fun(ply: Player))
 ---@overload fun(eventName: "HUDShouldDraw", identifier: string, func: fun(element: NSCOP.HUDBaseElement): boolean)
 ---@overload fun(eventName: "OnScreenSizeChanged", identifier: string, func: fun(oldWidth: number, oldHeight: number, newWidth: number, newHeight: number))
+---@overload fun(eventName: "ClientSignOnStateChanged", identifier: string, func: fun(userId: number, oldState: number, newState: number))
 function Utils.AddHook(eventName, identifier, func)
 	hook.Add(eventName, identifier, func)
 end
 
+-- TODO: Not sure if this should be in config module, or here
+---Returns the value of the config, or the default value if the config is not set
+---<br>REALM: SHARED
+---@generic T
+---@param key NSCOP.ConfigKey The key to check in the config
+---@param defaultValue T The default value to return if config value does not exist or config is not loaded
+---@return T
+function Utils.GetConfigValue(key, defaultValue)
+	if not NSCOP.Config then return defaultValue end
+
+	return NSCOP.Config[key] or defaultValue
+end
+
 --#region MEntity extensions
--- TODO: This should be moved to a more appropriate place, for example a module called MetaExtensions
 ---@class Entity
 local MEntity = FindMetaTable("Entity")
 
 ---Returns the direction the entity is moving in based on its velocity
+---<br>REALM: SHARED
 ---@param ignoreZAxis? boolean If true, the Z axis (up) will be ignored
 ---@nodiscard
 ---@return Vector direction The normalized direction vector the entity is moving in
@@ -114,6 +128,7 @@ end
 local MWeapon = FindMetaTable("Weapon")
 
 ---Returns whether the weapon is a combat swep
+---<br>REALM: SHARED
 ---@nodiscard
 ---@return boolean isCombatSWEP
 function MWeapon:NSCOP_IsCombatSWEP()
