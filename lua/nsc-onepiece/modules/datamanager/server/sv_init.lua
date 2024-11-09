@@ -55,14 +55,14 @@ end
 function DataManager:LoadData(ply)
 	local data = DataManager:GetDefaultData()
 
-	data.CharacterId = ply:NSCOP_GetPlayerDbNumber("CharacterId", data.CharacterId)
-	data.CharacterData = ply:NSCOP_GetPlayerDbTable("CharacterData", data.CharacterData)
-	data.Profession = ply:NSCOP_GetPlayerDbNumber("Profession", data.Profession)
-	data.Level = ply:NSCOP_GetPlayerDbNumber("Level", data.Level)
-	data.Experience = ply:NSCOP_GetPlayerDbNumber("Experience", data.Experience)
-	data.Money = ply:NSCOP_GetPlayerDbNumber("Money", data.Money)
-	data.Inventory = ply:NSCOP_GetPlayerDbTable("Inventory", data.Inventory)
-	data.Skills = ply:NSCOP_GetPlayerDbTable("Skills", data.Skills)
+	data.CharacterId = ply:NSCOP_GetPlayerDbNumber("NSCOP_CharacterId", data.CharacterId)
+	data.CharacterData = ply:NSCOP_GetPlayerDbTable("NSCOP_CharacterData", data.CharacterData)
+	data.Profession = ply:NSCOP_GetPlayerDbNumber("NSCOP_Profession", data.Profession)
+	data.Level = ply:NSCOP_GetPlayerDbNumber("NSCOP_Level", data.Level)
+	data.Experience = ply:NSCOP_GetPlayerDbNumber("NSCOP_Experience", data.Experience)
+	data.Money = ply:NSCOP_GetPlayerDbNumber("NSCOP_Money", data.Money)
+	data.Inventory = ply:NSCOP_GetPlayerDbTable("NSCOP_Inventory", data.Inventory)
+	data.Skills = ply:NSCOP_GetPlayerDbTable("NSCOP_Skills", data.Skills)
 
 	ply.NSCOP = {
 		PlayerData = data,
