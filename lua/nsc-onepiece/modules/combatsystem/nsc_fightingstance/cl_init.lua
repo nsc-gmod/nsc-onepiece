@@ -31,3 +31,14 @@ function FightingStance:DrawSkill(x, y, active)
 	surface.SetDrawColor(255, 255, 255, 255)
 	surface.DrawTexturedRect(x - skillSize, y - skillSize, skillSize, skillSize)
 end
+
+---@param element NSCOP.HUDBaseElement
+function FightingStance:HUDShouldDraw(element)
+	local isInCombatStance = self:GetCombatStance()
+
+	if isInCombatStance and element == "CHudWeaponSelection" then
+		return false
+	end
+
+	return true
+end
