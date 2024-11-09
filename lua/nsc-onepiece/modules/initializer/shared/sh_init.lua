@@ -1,4 +1,4 @@
----The purpose of this module called "Initizalizer" is to create all of the meta shit used by other modules and code
+---The main class, serves as a parent for almost everything
 ---@class NSCOP
 NSCOP = NSCOP or {}
 
@@ -10,6 +10,8 @@ CreateConVar("nsc_debug_debugmode", "0", { FCVAR_CHEAT, FCVAR_REPLICATED, FCVAR_
 NSCOP.Modules = {
 	Initializer = "initializer",
 	Utils = "utils",
+	ConfigManager = "configmanager",
+	DataManager = "datamanager",
 	CombatSystem = "combatsystem",
 }
 
@@ -72,6 +74,7 @@ end
 ---<br>REALM: SHARED
 ---@param module NSCOP.ModuleType Module name
 function NSCOP.IncludeModule(module)
+	if (NSCOP.Config and NSCOP.Config.IsModuleEnabled) and ! NSCOP.Config.IsModuleEnabled(module) then return end -- Fail if the module is disabled by config
 	NSCOP.IncludeShared("nsc-onepiece/modules/" .. module .. "/" .. module .. ".lua")
 end
 

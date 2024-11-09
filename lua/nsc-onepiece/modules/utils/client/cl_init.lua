@@ -1,5 +1,5 @@
 ---@class NSCOP.Utils
-local Utils = NSCOP.Utils
+local Utils = NSCOP.Utils or {}
 
 Utils.DefaultScreenW = 1920
 Utils.DefaultScreenH = 1080
