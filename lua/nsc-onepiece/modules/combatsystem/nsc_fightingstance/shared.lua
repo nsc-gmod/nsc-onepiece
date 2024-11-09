@@ -3,6 +3,9 @@
 ---@field GetCombatStance fun(): boolean Gets the current combat stance
 ---@field SetCombatStance fun(self: FightingStance, newValue: boolean) Sets the combat stance
 ---@
+---@field GetCombatStyle fun(): boolean Gets the current combat style
+---@field SetCombatStyle fun(self: FightingStance, newValue: boolean) Sets the combat style. Probably shouldnt be used during combat
+---@
 ---@field GetCurrentCombo fun(): integer Gets the current combo
 ---@field SetCurrentCombo fun(self: FightingStance, newValue: integer) Sets the current combo
 ---@
@@ -36,6 +39,7 @@ FightingStance.DodgeCD = 0.25
 
 function FightingStance:SetupDataTables()
 	NSCOP.Utils.NetworkVar(self, "Bool", "CombatStance")
+	NSCOP.Utils.NetworkVar(self, "Int", "CombatStyle")
 	NSCOP.Utils.NetworkVar(self, "Int", "CurrentCombo")
 	NSCOP.Utils.NetworkVar(self, "Int", "SelectedSkill")
 	NSCOP.Utils.NetworkVar(self, "Float", "NextDodge")
@@ -116,7 +120,7 @@ function FightingStance:Dodge()
 
 	-- I'm using SetLocalVelocity instead of SetVelocity, because SetVelocity is causing prediction errors
 	-- FIXME: For some reason, sometimes the player dodges a bit to the side, even though the moveDirection is correct
-	owner:SetLocalVelocity(moveDirection * finalForce)
+	owner:SetLocalVelocity(owner:GetVelocity() + moveDirection * finalForce)
 	NSCOP.Print("Player dodged", owner)
 
 	self:SetNextDodge(CurTime() + self.DodgeCD)
@@ -158,3 +162,6 @@ NSCOP.IncludeServer("sv_init.lua")
 NSCOP.IncludeClient("cl_init.lua")
 
 weapons.Register(FightingStance, "nsc_fightingstance")
+
+---@diagnostic disable-next-line: assign-type-mismatch
+FightingStance = nil

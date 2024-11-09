@@ -20,6 +20,14 @@ NSCOP.Utils.AddHook("PlayerButtonDown", "NSCOP.CombatSystem.PlayerButtonDown", f
 	elseif button == KEY_6 then
 		weapon:SetSelectedSkill(6)
 	end
+end)
 
-	ply:ChatPrint("Selected skill: " .. weapon:GetSelectedSkill())
+NSCOP.Utils.AddHook("PlayerButtonUp", "NSCOP.CombatSystem.PlayerButtonUp", function(ply, button)
+	if not ply:IsValid() then return end
+
+	local weapon = ply:GetActiveWeapon()
+	if not weapon:IsValid() then return end
+	if not weapon:NSCOP_IsCombatSWEP() then return end
+	---@cast weapon FightingStance
+
 end)
