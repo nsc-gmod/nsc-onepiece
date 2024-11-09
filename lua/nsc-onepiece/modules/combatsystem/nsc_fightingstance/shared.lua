@@ -8,6 +8,9 @@
 ---@
 ---@field GetNextDodge fun(): number Gets the time when the player can dodge again
 ---@field SetNextDodge fun(self: FightingStance, newValue: number) Sets the time when the player can dodge again (Should be used with CurTime)
+---@
+---@field GetSelectedSkill fun(): integer Gets the selected skill, -1 means no skill selected
+---@field SetSelectedSkill fun(self: FightingStance, newValue: integer) Sets the selected skill, -1 means no skill selected
 
 ---@class FightingStance: SWEP
 FightingStance = {}
@@ -28,17 +31,19 @@ FightingStance.PrimaryCD = 0.1
 FightingStance.SecondaryCD = 0.1
 
 FightingStance.CanDodge = true
-FightingStance.DodgeForce = 6000
+FightingStance.DodgeForce = 600
 FightingStance.DodgeCD = 0.25
 
 function FightingStance:SetupDataTables()
 	NSCOP.Utils.NetworkVar(self, "Bool", "CombatStance")
 	NSCOP.Utils.NetworkVar(self, "Int", "CurrentCombo")
+	NSCOP.Utils.NetworkVar(self, "Int", "SelectedSkill")
 	NSCOP.Utils.NetworkVar(self, "Float", "NextDodge")
 end
 
 function FightingStance:Initialize()
 	self:InitializeCooldowns()
+	self:InitializeVars()
 	self:SetCombatStance(true)
 end
 
@@ -48,6 +53,7 @@ end
 function FightingStance:Holster()
 	self:SetCombatStance(false)
 	self:SetCurrentCombo(0)
+	return true
 end
 
 function FightingStance:PrimaryAttack()
@@ -61,6 +67,19 @@ end
 
 function FightingStance:SecondaryAttack()
 	if not self:GetCombatStance() then return end
+
+	local owner = self:GetOwner()
+	if not owner:IsValid() then return end
+	if not owner:IsPlayer() then return end
+	---@cast owner Player
+
+	if self:GetSelectedSkill() == -1 then
+		if CLIENT then
+			owner:ChatPrint("No skill selected!")
+		end
+		NSCOP.PrintDebug("No skill selected!")
+		return
+	end
 
 	NSCOP.Print("Secondary Attack")
 
@@ -90,9 +109,15 @@ function FightingStance:Dodge()
 	-- Fixes an issue where there is a velocity hickup when the player is in air
 	if (moveDirection == vector_origin) then return end
 
+	local finalForce = self.DodgeForce
+
+	if owner:OnGround() then
+		finalForce = finalForce * 3
+	end
+
 	-- I'm using SetLocalVelocity instead of SetVelocity, because SetVelocity is causing prediction errors
 	-- FIXME: For some reason, sometimes the player dodges a bit to the side, even though the moveDirection is correct
-	owner:SetLocalVelocity(moveDirection * self.DodgeForce)
+	owner:SetLocalVelocity(moveDirection * finalForce)
 	NSCOP.Print("Player dodged", owner)
 
 	self:SetNextDodge(CurTime() + self.DodgeCD)
@@ -109,6 +134,13 @@ function FightingStance:IncreaseCombo()
 	else
 		self:SetCurrentCombo(currentCombo + 1)
 	end
+end
+
+---Initializes all variables to their default values
+function FightingStance:InitializeVars()
+	self:SetCombatStance(false)
+	self:SetCurrentCombo(0)
+	self:SetSelectedSkill(-1)
 end
 
 ---Resets and starts all cooldowns. This is called upon Initialization, so that players can't spam actions right after gaining the swep
