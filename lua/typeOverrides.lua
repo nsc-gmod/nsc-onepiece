@@ -2,8 +2,10 @@
 ---@class InvalidEntity : Entity
 NULL = NULL
 
+---@alias SteamID64 string A 64-bit Steam ID, also known as SteamID64
+---@alias SteamID string A Steam ID, also known as SteamID
 
----@alias NSCOP.HookEventName 
+---@alias NSCOP.HookEventName
 ---| "AcceptInput"
 ---| "AddDeathNotice"
 ---| "AdjustMouseSensitivity"
@@ -23,3 +25,32 @@ NULL = NULL
 ---| "PlayerInitialSpawn"
 ---| "PlayerSay"
 ---| "PlayerSpawn"
+
+---The base element of the HUD. Used to determine which HUD element to block with HUDShouldDraw
+---<br>Elements list: https://wiki.facepunch.com/gmod/HUD_Element_List
+---@alias NSCOP.HUDBaseElement
+---| "CHudAmmo"
+---| "CHudBattery"
+---| "CHudChat"
+---| "CHudCrosshair"
+---| "CHudCloseCaption"
+---| "CHudDamageIndicator"
+---| "CHudHistoryResource"
+---| "CHudDeathNotice"
+---| "CHudGeiger"
+---| "CHudGMod"
+---| "CHudHealth"
+---| "CHudHintDisplay"
+---| "CHudMenu"
+---| "CHudMessage"
+---| "CHudPoisonDamageIndicator"
+---| "CHudSecondaryAmmo"
+---| "CHudSquadStatus"
+---| "CHudTrain"
+---| "CHudVehicle"
+---| "CHudWeapon"
+---| "CHudWeaponSelection"
+---| "CHudZoom"
+---| "NetGraph"
+---| "CHUDQuickInfo" The sudden change in the prefix CHUD is not a mistake
+---| "CHudSuitPower"

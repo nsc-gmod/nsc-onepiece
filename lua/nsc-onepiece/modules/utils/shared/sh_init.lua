@@ -39,6 +39,8 @@ end
 ---@overload fun(eventName: "PlayerHurt", identifier: string, func: fun(ply: Player, attacker: Entity, healthRemaining: number, damageTaken: number))
 ---@overload fun(eventName: "PlayerSpawn", identifier: string, func: fun(ply: Player))
 ---@overload fun(eventName: "PlayerDisconnected", identifier: string, func: fun(ply: Player))
+---@overload fun(eventName: "HUDShouldDraw", identifier: string, func: fun(element: NSCOP.HUDBaseElement): boolean)
+---@overload fun(eventName: "OnScreenSizeChanged", identifier: string, func: fun(oldWidth: number, oldHeight: number, newWidth: number, newHeight: number))
 function Utils.AddHook(eventName, identifier, func)
 	hook.Add(eventName, identifier, func)
 end
