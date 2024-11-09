@@ -42,8 +42,8 @@ function FightingStance:SetupDataTables()
 end
 
 function FightingStance:Initialize()
-	self:InitializeCooldowns()
-	self:InitializeVars()
+	self:ResetCooldowns()
+	self:ResetVars()
 	self:SetCombatStance(true)
 end
 
@@ -51,8 +51,7 @@ function FightingStance:Deploy()
 end
 
 function FightingStance:Holster()
-	self:SetCombatStance(false)
-	self:SetCurrentCombo(0)
+	self:ResetVars()
 	return true
 end
 
@@ -104,7 +103,7 @@ function FightingStance:Dodge()
 	if not owner:IsPlayer() then return end
 	---@cast owner Player
 
-	local moveDirection = owner:GetMoveDirection(true)
+	local moveDirection = owner:NSCOP_GetMoveDirection(true)
 
 	-- Fixes an issue where there is a velocity hickup when the player is in air
 	if (moveDirection == vector_origin) then return end
@@ -136,15 +135,15 @@ function FightingStance:IncreaseCombo()
 	end
 end
 
----Initializes all variables to their default values
-function FightingStance:InitializeVars()
+---Resets all variables to their default values
+function FightingStance:ResetVars()
 	self:SetCombatStance(false)
 	self:SetCurrentCombo(0)
 	self:SetSelectedSkill(-1)
 end
 
 ---Resets and starts all cooldowns. This is called upon Initialization, so that players can't spam actions right after gaining the swep
-function FightingStance:InitializeCooldowns()
+function FightingStance:ResetCooldowns()
 	local curTime = CurTime()
 
 	self:SetNextPrimaryFire(curTime + self.PrimaryCD)
