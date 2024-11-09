@@ -18,6 +18,31 @@ function Utils.NetworkVar(entity, type, name)
 	entity:NetworkVar(type, name)
 end
 
+---Type safe way to add a hook
+---<br>REALM: SHARED
+---@param eventName string The name of the event to hook
+---@param identifier string | Entity  A unique identifier for the hook
+---@param func function The function to call when the event is triggered
+---@overload fun(eventName: "PlayerInitialSpawn", identifier: string, func: fun(ply: Player))
+---@overload fun(eventName: "PlayerDisconnected", identifier: string, func: fun(ply: Player))
+---@overload fun(eventName: "PlayerSay", identifier: string, func: fun(ply: Player, text: string, teamOnly: boolean): string)
+---@overload fun(eventName: "PlayerDeath", identifier: string, func: fun(victim: Player, inflictor: Entity, attacker: Player))
+---@overload fun(eventName: "EntityTakeDamage", identifier: string, func: fun(target: Entity, dmginfo: CTakeDamageInfo))
+---@overload fun(eventName: "KeyPress", identifier: string, func: fun(ply: Player, key: IN))
+---@overload fun(eventName: "KeyRelease", identifier: string, func: fun(ply: Player, key: IN))
+---@overload fun(eventName: "PlayerButtonDown", identifier: string, func: fun(ply: Player, button: BUTTON_CODE | KEY | MOUSE | JOYSTICK))
+---@overload fun(eventName: "PlayerButtonUp", identifier: string, func: fun(ply: Player, button: BUTTON_CODE | KEY | MOUSE | JOYSTICK))
+---@overload fun(eventName: "PlayerCanHearPlayersVoice", identifier: string, func: fun(listener: Player, talker: Player): boolean)
+---@overload fun(eventName: "PlayerCanSeePlayersChat", identifier: string, func: fun(text: string, teamOnly: boolean, listener: Player, speaker: Player): boolean)
+---@overload fun(eventName: "PlayerFootstep", identifier: string, func: fun(ply: Player, pos: Vector, foot: number, sound: string, volume: number, filter: CRecipientFilter): boolean)
+---@overload fun(eventName: "PlayerDeathSound", identifier: string, func: fun(ply: Player): string)
+---@overload fun(eventName: "PlayerHurt", identifier: string, func: fun(ply: Player, attacker: Entity, healthRemaining: number, damageTaken: number))
+---@overload fun(eventName: "PlayerSpawn", identifier: string, func: fun(ply: Player))
+---@overload fun(eventName: "PlayerDisconnected", identifier: string, func: fun(ply: Player))
+function Utils.AddHook(eventName, identifier, func)
+	hook.Add(eventName, identifier, func)
+end
+
 --#region MEntity extensions
 -- TODO: This should be moved to a more appropriate place, for example a module called MetaExtensions
 ---@class Entity
@@ -27,7 +52,7 @@ local MEntity = FindMetaTable("Entity")
 ---@param ignoreZAxis? boolean If true, the Z axis (up) will be ignored
 ---@nodiscard
 ---@return Vector direction The normalized direction vector the entity is moving in
-function MEntity:GetVelocityDirection(ignoreZAxis)
+function MEntity:NSCOP_GetVelocityDirection(ignoreZAxis)
 	local velocity = self:GetVelocity()
 	local direction = velocity:GetNormalized()
 
@@ -49,7 +74,7 @@ local MPlayer = FindMetaTable("Player")
 ---@param ignoreZAxis? boolean If true, the Z axis (up) will be ignored
 ---@nodiscard
 ---@return Vector direction The normalized direction vector the player is moving in
-function MPlayer:GetMoveDirection(ignoreZAxis)
+function MPlayer:NSCOP_GetMoveDirection(ignoreZAxis)
 	local eyeAngles = self:EyeAngles()
 
 	local forward = eyeAngles:Forward()
@@ -78,6 +103,19 @@ function MPlayer:GetMoveDirection(ignoreZAxis)
 	end
 
 	return moveDirection:GetNormalized()
+end
+
+--#endregion
+
+--#region MWeapon extensions
+---@class Weapon
+local MWeapon = FindMetaTable("Weapon")
+
+---Returns whether the weapon is a combat swep
+---@nodiscard
+---@return boolean isCombatSWEP
+function MWeapon:NSCOP_IsCombatSWEP()
+	return self:GetClass() == "nsc_fightingstance"
 end
 
 --#endregion
