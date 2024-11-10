@@ -72,6 +72,27 @@ function Utils.GetConfigValue(key, defaultValue)
 	return NSCOP.Config[key] or defaultValue
 end
 
+--TODO: Refactor this in the future
+---Returns players for the console command autocomplete
+---<br>REALM: SHARED
+---@param commandName string The name of the command
+---@param cmd string The command string
+---@param argStr string The current argument string
+---@param args table The arguments table
+---@return string[] playersAutocomplete
+function Utils.GetPlayersAutocomplete(commandName, cmd, argStr, args)
+	local playersAutocomplete = {}
+
+	for _, currentPly in player.Iterator() do
+		if not currentPly:GetName():lower():StartsWith(argStr:Trim():lower()) then continue end
+
+		---@cast currentPly Player
+		table.insert(playersAutocomplete, commandName .. " " .. currentPly:GetName())
+	end
+
+	return playersAutocomplete
+end
+
 --#region MEntity extensions
 ---@class Entity
 local MEntity = FindMetaTable("Entity")

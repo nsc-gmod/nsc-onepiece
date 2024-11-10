@@ -65,6 +65,16 @@ NSCOP.KeyState = {
 	Released = 3
 }
 
+---@enum NSCOP.BodyGroup
+NSCOP.BodyGroup = {
+	Hair = 0,
+	Nose = 1,
+	Eye = 2,
+	Eyebrow = 3,
+	Mouth = 4,
+	Outfit = 5
+}
+
 ---@class NSCOP.ButtonData
 ---@field Button NSCOP.ButtonValue
 ---@field State NSCOP.ButtonState
@@ -139,7 +149,7 @@ function DataManager:GetDefaultData()
 			SkinColor = 0,
 			HairColor = 0,
 			EyeColor = 0,
-			Size = 0,
+			Size = 1,
 			Outfit = 0
 		},
 		Race = NSCOP.Race.None,
@@ -265,20 +275,39 @@ function DataManager:NetReadControls()
 	return controlsData
 end
 
---#region ConCommands
+--Loads the character on the player entity
+---<br>REALM: SHARED
+---@param ply Player
+function DataManager:LoadCharacterAppearance(ply)
+	if not ply:IsValid() then return end
 
-local function getPlayersAutocomplete(commandName, cmd, argStr, args)
-	local players = {}
-
-	for _, currentPly in player.Iterator() do
-		if not currentPly:GetName():lower():StartsWith(argStr:Trim():lower()) then continue end
-
-		---@cast currentPly Player
-		table.insert(players, commandName .. " " .. currentPly:GetName())
+	if not ply.NSCOP then
+		NSCOP.PrintDebug("Player has no NSCOP table")
+		return
 	end
 
-	return players
+	if not ply.NSCOP.PlayerData then
+		NSCOP.PrintDebug("Player has no PlayerData table")
+		return
+	end
+
+	local characterData = ply.NSCOP.PlayerData.CharacterData
+
+	-- ply:SetModel("OUR CUSTOM MODEL")
+	-- ply:SetSkin(characterData.SkinColor)
+	-- ply:SetBodygroup(NSCOP.BodyGroup.Hair, characterData.HairType)
+	-- ply:SetBodygroup(NSCOP.BodyGroup.Nose, characterData.NoseType)
+	-- ply:SetBodygroup(NSCOP.BodyGroup.Eye, characterData.EyeType)
+	-- ply:SetBodygroup(NSCOP.BodyGroup.Eyebrow, characterData.EyebrowType)
+	-- ply:SetBodygroup(NSCOP.BodyGroup.Mouth, characterData.MouthType)
+	-- ply:SetBodygroup(NSCOP.BodyGroup.Outfit, characterData.Outfit)
+	-- ply:SetPlayerColor(Vector(characterData.HairColor / 255, characterData.EyeColor / 255, 0))
+	ply:SetModelScale(characterData.Size, 0.000001) -- 0.000001 to avoid a bug with SetModelScale
+
+	NSCOP.PrintDebug("Loaded character appearance for", ply:GetName())
 end
+
+--#region ConCommands
 
 concommand.Add("nscop_nscopdata_" .. (SERVER and "sv" or "cl"), function(ply, cmd, args, argStr)
 	if not ply:IsValid() then
@@ -309,7 +338,7 @@ concommand.Add("nscop_nscopdata_" .. (SERVER and "sv" or "cl"), function(ply, cm
 	NSCOP.Print("NSCOP data for: ", ply:GetName())
 	PrintTable(ply.NSCOP)
 end, function(cmd, argStr, args)
-	return getPlayersAutocomplete("nscop_display_nscopdata_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
+	return NSCOP.Utils.GetPlayersAutocomplete("nscop_display_nscopdata_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
 end)
 
 concommand.Add("nscop_playerdata_" .. (SERVER and "sv" or "cl"), function(ply, cmd, args, argStr)
@@ -341,7 +370,7 @@ concommand.Add("nscop_playerdata_" .. (SERVER and "sv" or "cl"), function(ply, c
 	NSCOP.Print("Player data for: ", ply:GetName())
 	PrintTable(ply.NSCOP.PlayerData)
 end, function(cmd, argStr, args)
-	return getPlayersAutocomplete("nscop_display_playerdata_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
+	return NSCOP.Utils.GetPlayersAutocomplete("nscop_display_playerdata_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
 end)
 
 concommand.Add("nscop_controls_" .. (SERVER and "sv" or "cl"), function(ply, cmd, args, argStr)
@@ -373,7 +402,7 @@ concommand.Add("nscop_controls_" .. (SERVER and "sv" or "cl"), function(ply, cmd
 	NSCOP.Print("Player controls for: ", ply:GetName())
 	PrintTable(ply.NSCOP.Controls)
 end, function(cmd, argStr, args)
-	return getPlayersAutocomplete("nscop_display_controls_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
+	return NSCOP.Utils.GetPlayersAutocomplete("nscop_display_controls_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
 end)
 
 --#endregion
