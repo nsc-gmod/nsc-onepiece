@@ -1,7 +1,7 @@
 ---@class NSCOP.DataManager
 NSCOP.DataManager = NSCOP.DataManager or {}
 NSCOP.DataManager.AutosaveEnabled = NSCOP.Utils.GetConfigValue("AutosaveEnabled", true)
-NSCOP.DataManager.AutosaveInterval = NSCOP.Utils.GetConfigValue("AutosaveInterval", 60)
+NSCOP.DataManager.AutosaveInterval = NSCOP.Utils.GetConfigValue("AutosaveInterval", 300)
 NSCOP.DataManager.NextAutoSave = CurTime() + NSCOP.DataManager.AutosaveInterval
 
 ---@class NSCOP.DataManager
@@ -31,6 +31,7 @@ util.AddNetworkString(DataManager.NetworkMessage.SV_SyncData)
 ---| "NSCOP_Controls"
 
 ---Writes the data of the player to the current net message
+---<br>REALM: SERVER
 ---@param characterData NSCOP.CharacterData
 function DataManager:NetWriteCharacterData(characterData)
 	net.WriteUInt(characterData.HairType, 4)
@@ -47,6 +48,7 @@ function DataManager:NetWriteCharacterData(characterData)
 end
 
 ---Writes the inventory data of the player to the current net message
+---<br>REALM: SERVER
 ---@param inventoryData integer[]
 function DataManager:NetWriteInventoryData(inventoryData)
 	DataManager:NetWriteSequentialTable(inventoryData, 16, 16)
@@ -55,6 +57,7 @@ function DataManager:NetWriteInventoryData(inventoryData)
 end
 
 ---Writes the skills data of the player to the current net message
+---<br>REALM: SERVER
 ---@param skillsData integer[]
 function DataManager:NetWriteSkillsData(skillsData)
 	DataManager:NetWriteSequentialTable(skillsData, 16, 8)
@@ -75,6 +78,7 @@ function DataManager:LoadData(ply)
 
 	local playerExists = ply:GetPData("NSCOP_CharacterId", false)
 
+	-- TODO: Export to its own function
 	-- Don't load data if the player already has them
 	if not playerExists then
 		ply.NSCOP = {
@@ -83,6 +87,8 @@ function DataManager:LoadData(ply)
 
 		net.Start(DataManager.NetworkMessage.SV_InitData)
 		net.Send(ply)
+
+		DataManager:LoadCharacterAppearance(ply)
 
 		NSCOP.PrintDebug("Initialized data for player: ", ply)
 		return
@@ -102,8 +108,6 @@ function DataManager:LoadData(ply)
 		PlayerData = data,
 	}
 
-	NSCOP.PrintDebug("Loaded data for player: ", ply)
-
 	net.Start(DataManager.NetworkMessage.SV_SyncData)
 	net.WriteUInt(data.CharacterId, 2)
 	net.WriteString(data.CharacterName)
@@ -118,9 +122,14 @@ function DataManager:LoadData(ply)
 	DataManager:NetWriteInventoryData(data.Inventory)
 	DataManager:NetWriteSkillsData(data.Skills)
 	net.Send(ply)
+
+	DataManager:LoadCharacterAppearance(ply)
+
+	NSCOP.PrintDebug("Loaded data for player: ", ply)
 end
 
 ---Saves the data of the player to the database
+---<br>REALM: SERVER
 ---@param ply Player
 function DataManager:SaveData(ply)
 	if not ply.NSCOP then
@@ -136,14 +145,14 @@ function DataManager:SaveData(ply)
 	end
 
 	ply:SetPData("NSCOP_CharacterId", data.CharacterId)
-	ply:SetPData("NSCOP_CharacterData", data.CharacterData)
+	ply:SetPData("NSCOP_CharacterData", util.TableToJSON(data.CharacterData))
 	ply:SetPData("NSCOP_Profession", data.Profession)
 	ply:SetPData("NSCOP_Level", data.Level)
 	ply:SetPData("NSCOP_Experience", data.Experience)
 	ply:SetPData("NSCOP_SkillPoints", data.SkillPoints)
 	ply:SetPData("NSCOP_Money", data.Money)
-	ply:SetPData("NSCOP_Inventory", data.Inventory)
-	ply:SetPData("NSCOP_Skills", data.Skills)
+	ply:SetPData("NSCOP_Inventory", util.TableToJSON(data.Inventory))
+	ply:SetPData("NSCOP_Skills", util.TableToJSON(data.Skills))
 
 	NSCOP.PrintDebug("Saved data for player: ", ply)
 end
@@ -239,6 +248,36 @@ net.Receive(DataManager.NetworkMessage.CL_UpdateControlsKey, function(len, ply)
 
 	NSCOP.PrintDebug("Updated controls key for player: ", ply)
 	NSCOP.PrintDebug("Key: ", key, "Old value: ", oldValue, "New value: ", newValue)
+end)
+
+--#endregion
+
+--#region ConCommands
+
+concommand.Add("nscop_savedata_sv", function(ply, cmd, args, argStr)
+	if not ply:IsValid() then
+		NSCOP.PrintDebug("You can only run this command as a player")
+		return
+	end
+
+	if not ply:IsAdmin() then
+		NSCOP.PrintDebug("You need to be an admin to run this command")
+		return
+	end
+
+	if argStr then
+		for _, currentPly in player.Iterator() do
+			---@cast currentPly Player
+			if currentPly:GetName():lower():StartsWith(argStr:lower()) then
+				ply = currentPly
+				break
+			end
+		end
+	end
+
+	DataManager:SaveData(ply)
+end, function(cmd, argStr, args)
+	return NSCOP.Utils.GetPlayersAutocomplete("nscop_savedata_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
 end)
 
 --#endregion
