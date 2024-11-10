@@ -35,6 +35,6 @@ Utils.AddHook("OnScreenSizeChanged", "NSCOP.Utils.SyncScreenSize", function(oldW
 	Utils.ScreenW = newWidth
 	Utils.ScreenH = newHeight
 
-	NSCOP.PrintDebug("Screen width change to", newWidth)
-	NSCOP.PrintDebug("Screen height change to", newHeight)
+	NSCOP.PrintDebug("Screen width changed to", newWidth)
+	NSCOP.PrintDebug("Screen height changed to", newHeight)
 end)

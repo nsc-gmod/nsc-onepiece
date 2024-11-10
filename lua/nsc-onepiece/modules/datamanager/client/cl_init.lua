@@ -4,6 +4,8 @@ NSCOP.DataManager = NSCOP.DataManager or {}
 ---@class NSCOP.DataManager
 local DataManager = NSCOP.DataManager
 
+---Loads the controls for the player and syncs them with the server
+---<br>REALM: CLIENT
 function DataManager:LoadControls()
 	local ply = LocalPlayer()
 	local defaultControls = self:GetDefaultControls()
@@ -19,7 +21,7 @@ function DataManager:LoadControls()
 		ply.NSCOP = ply.NSCOP or {}
 		ply.NSCOP.Controls = defaultControls
 
-		net.Start("NSCOP.DataManager.CL.InitControls")
+		net.Start(DataManager.NetworkMessage.CL_InitControls)
 		net.SendToServer()
 		NSCOP.PrintDebug("Initialized controls for player: ", ply)
 		return
@@ -31,7 +33,7 @@ function DataManager:LoadControls()
 	ply.NSCOP = ply.NSCOP or {}
 	ply.NSCOP.Controls = data
 
-	net.Start("NSCOP.DataManager.CL.SyncControls")
+	net.Start(DataManager.NetworkMessage.CL_SyncControls)
 	DataManager:NetWriteControls(data)
 	net.SendToServer()
 
@@ -79,7 +81,7 @@ function DataManager:UpdateControlsKey(key, newValue)
 
 	ply.NSCOP.Controls[key].Button = newValue
 
-	net.Start("NSCOP.DataManager.CL.UpdateControlsKey")
+	net.Start(DataManager.NetworkMessage.CL_UpdateControlsKey)
 	net.WriteUInt(key, 8)
 	---@diagnostic disable-next-line: param-type-mismatch
 	net.WriteUInt(newValue, 8)
@@ -169,13 +171,13 @@ NSCOP.Utils.AddHook("ClientSignOnStateChanged", "NSCOP.DataManager.ClientReady",
 end)
 
 NSCOP.Utils.AddHook("NSCOP.PlayerLoaded", "NSCOP.DataManager.PlayerLoaded", function(ply)
-	net.Start("NSCOP.DataManager.CL.ClientReady")
+	net.Start(DataManager.NetworkMessage.CL_ClientReady)
 	net.SendToServer()
 
 	DataManager:LoadControls()
 end)
 
-net.Receive("NSCOP.DataManager.SV.InitData", function()
+net.Receive(DataManager.NetworkMessage.SV_InitData, function()
 	local ply = LocalPlayer()
 
 	local defaultData = DataManager:GetDefaultData()
@@ -189,7 +191,7 @@ net.Receive("NSCOP.DataManager.SV.InitData", function()
 	NSCOP.PrintDebug("Initialized and loaded default data for player: ", ply:GetName())
 end)
 
-net.Receive("NSCOP.DataManager.SV.SyncData", function(len)
+net.Receive(DataManager.NetworkMessage.SV_SyncData, function(len)
 	---@type NSCOP.PlayerData
 	local data = DataManager:NetReadPlayerData()
 

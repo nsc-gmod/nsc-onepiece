@@ -4,6 +4,16 @@ NSCOP.DataManager = NSCOP.DataManager or {}
 ---@class NSCOP.DataManager
 local DataManager = NSCOP.DataManager
 
+---@enum NSCOP.DataManager.NetworkMessage
+NSCOP.DataManager.NetworkMessage = {
+	SV_InitData = "NSCOP.DataManager.SV.InitData",
+	SV_SyncData = "NSCOP.DataManager.SV.SyncData",
+	CL_ClientReady = "NSCOP.DataManager.CL.ClientReady",
+	CL_InitControls = "NSCOP.DataManager.CL.InitControls",
+	CL_SyncControls = "NSCOP.DataManager.CL.SyncControls",
+	CL_UpdateControlsKey = "NSCOP.DataManager.CL.UpdateControlsKey",
+}
+
 ---@enum NSCOP.Race
 NSCOP.Race = {
 	None = 0,
@@ -38,7 +48,13 @@ NSCOP.ButtonType = {
 	SelectSkillFive = 5,
 	SelectSkillSix = 6,
 	SkillDodge = 7,
-	SkillUse = 8,
+	SkillUse = 8, -- Uses the selected skill 1 - 6
+	InventoryMenu = 9,
+	CharacterMenu = 10,
+	MainMenu = 11,
+	RadialMenu = 12,
+	SkillMenu = 13,
+	EmoteMenu = 14,
 }
 
 ---@enum NSCOP.ButtonState
@@ -90,8 +106,20 @@ NSCOP.KeyState = {
 ---@class Player
 ---@field NSCOP? Player.NSCOP
 
----@class Player
-local MPlayer = FindMetaTable("Player")
+---Writes the sequential table data to the current net message
+---<br>REALM: SHARED
+---@generic T : integer[]
+---@param data T
+---@param lengthBits integer
+---@param keyBits integer
+function DataManager:NetWriteSequentialTable(data, lengthBits, keyBits)
+	local length = #data
+
+	net.WriteUInt(length, lengthBits)
+	for i = 1, length do
+		net.WriteUInt(data[i], keyBits)
+	end
+end
 
 ---Gets the default data for the player
 ---<br>REALM: SHARED
@@ -158,7 +186,11 @@ function DataManager:GetDefaultControls()
 	return controls
 end
 
+---@class Player
+local MPlayer = FindMetaTable("Player")
+
 ---Type safe way to get the player's string data
+---<br>REALM: SHARED
 ---@param storeName NSCOP.DbDataKey
 ---@param defaultValue string
 ---@nodiscard
@@ -168,6 +200,7 @@ function MPlayer:NSCOP_GetPlayerDbString(storeName, defaultValue)
 end
 
 ---Type safe way to get the player's number data
+---<br>REALM: SHARED
 ---@param storeName NSCOP.DbDataKey
 ---@param defaultValue number
 ---@nodiscard
@@ -183,6 +216,7 @@ function MPlayer:NSCOP_GetPlayerDbNumber(storeName, defaultValue)
 end
 
 ---Type safe way to get the player's table data
+---<br>REALM: SHARED
 ---@generic T : table
 ---@param storeName NSCOP.DbDataKey
 ---@param defaultValue T

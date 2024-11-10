@@ -1,18 +1,19 @@
-util.AddNetworkString("NSCOP.DataManager.CL.ClientReady")
-util.AddNetworkString("NSCOP.DataManager.CL.InitControls")
-util.AddNetworkString("NSCOP.DataManager.CL.SyncControls")
-util.AddNetworkString("NSCOP.DataManager.CL.UpdateControlsKey")
-
-util.AddNetworkString("NSCOP.DataManager.SV.InitData")
-util.AddNetworkString("NSCOP.DataManager.SV.SyncData")
-
 ---@class NSCOP.DataManager
 NSCOP.DataManager = NSCOP.DataManager or {}
 NSCOP.DataManager.AutosaveEnabled = NSCOP.Utils.GetConfigValue("AutosaveEnabled", true)
 NSCOP.DataManager.AutosaveInterval = NSCOP.Utils.GetConfigValue("AutosaveInterval", 60)
+NSCOP.DataManager.NextAutoSave = CurTime() + NSCOP.DataManager.AutosaveInterval
 
 ---@class NSCOP.DataManager
 local DataManager = NSCOP.DataManager
+
+util.AddNetworkString(DataManager.NetworkMessage.CL_ClientReady)
+util.AddNetworkString(DataManager.NetworkMessage.CL_InitControls)
+util.AddNetworkString(DataManager.NetworkMessage.CL_SyncControls)
+util.AddNetworkString(DataManager.NetworkMessage.CL_UpdateControlsKey)
+
+util.AddNetworkString(DataManager.NetworkMessage.SV_InitData)
+util.AddNetworkString(DataManager.NetworkMessage.SV_SyncData)
 
 -- TODO: Might be better to switch to raw SQL in the future, but I'm not sure how well its going to be handled
 
@@ -48,12 +49,7 @@ end
 ---Writes the inventory data of the player to the current net message
 ---@param inventoryData integer[]
 function DataManager:NetWriteInventoryData(inventoryData)
-	local inventoryLength = #inventoryData
-
-	net.WriteUInt(inventoryLength, 16)
-	for i = 1, inventoryLength do
-		net.WriteUInt(inventoryData[i], 16)
-	end
+	DataManager:NetWriteSequentialTable(inventoryData, 16, 16)
 
 	NSCOP.PrintDebug("Inventory data size", net.BytesWritten())
 end
@@ -61,12 +57,7 @@ end
 ---Writes the skills data of the player to the current net message
 ---@param skillsData integer[]
 function DataManager:NetWriteSkillsData(skillsData)
-	local skillsLength = #skillsData
-
-	net.WriteUInt(skillsLength, 16)
-	for i = 1, skillsLength do
-		net.WriteUInt(skillsData[i], 8)
-	end
+	DataManager:NetWriteSequentialTable(skillsData, 16, 8)
 
 	NSCOP.PrintDebug("Skills data size", net.BytesWritten())
 end
@@ -84,13 +75,13 @@ function DataManager:LoadData(ply)
 
 	local playerExists = ply:GetPData("NSCOP_CharacterId", false)
 
-	-- Don't load data if the player already has data
+	-- Don't load data if the player already has them
 	if not playerExists then
 		ply.NSCOP = {
 			PlayerData = data,
 		}
 
-		net.Start("NSCOP.DataManager.SV.InitData")
+		net.Start(DataManager.NetworkMessage.SV_InitData)
 		net.Send(ply)
 
 		NSCOP.PrintDebug("Initialized data for player: ", ply)
@@ -113,7 +104,7 @@ function DataManager:LoadData(ply)
 
 	NSCOP.PrintDebug("Loaded data for player: ", ply)
 
-	net.Start("NSCOP.DataManager.SV.SyncData")
+	net.Start(DataManager.NetworkMessage.SV_SyncData)
 	net.WriteUInt(data.CharacterId, 2)
 	net.WriteString(data.CharacterName)
 	DataManager:NetWriteCharacterData(data.CharacterData)
@@ -132,16 +123,39 @@ end
 ---Saves the data of the player to the database
 ---@param ply Player
 function DataManager:SaveData(ply)
+	if not ply.NSCOP then
+		NSCOP.PrintDebug("Player does not have the NSCOP table: ", ply)
+		return
+	end
 
+	local data = ply.NSCOP.PlayerData
+
+	if not data then
+		NSCOP.PrintDebug("Player does not have data to save: ", ply)
+		return
+	end
+
+	ply:SetPData("NSCOP_CharacterId", data.CharacterId)
+	ply:SetPData("NSCOP_CharacterData", data.CharacterData)
+	ply:SetPData("NSCOP_Profession", data.Profession)
+	ply:SetPData("NSCOP_Level", data.Level)
+	ply:SetPData("NSCOP_Experience", data.Experience)
+	ply:SetPData("NSCOP_SkillPoints", data.SkillPoints)
+	ply:SetPData("NSCOP_Money", data.Money)
+	ply:SetPData("NSCOP_Inventory", data.Inventory)
+	ply:SetPData("NSCOP_Skills", data.Skills)
+
+	NSCOP.PrintDebug("Saved data for player: ", ply)
 end
 
-local connectedPlayers = {}
+-- A table of all players that have connected to the server, so we don't need to load data for them again
+local loadedPlayers = {}
 
 NSCOP.Utils.AddHook("NSCOP.PlayerLoaded", "NSCOP.DataManager.PlayerLoaded", function(ply)
 	local steamId64 = ply:SteamID64()
-	if connectedPlayers[steamId64] then return end
+	if loadedPlayers[steamId64] then return end
 
-	connectedPlayers[steamId64] = true
+	loadedPlayers[steamId64] = true
 
 	NSCOP.PrintDebug("Player loaded: ", ply)
 
@@ -151,16 +165,33 @@ end)
 NSCOP.Utils.AddHook("PlayerDisconnected", "NSCOP.DataManager.PlayerDisconnected", function(ply)
 	if not ply:IsValid() then return end
 
-	connectedPlayers[ply:SteamID64()] = nil
+	loadedPlayers[ply:SteamID64()] = nil
 end)
 
-net.Receive("NSCOP.DataManager.CL.ClientReady", function(len, ply)
+NSCOP.Utils.AddHook("Tick", "NSCOP.DataManager.Autosave", function()
+	if not DataManager.AutosaveEnabled then return end
+	if CurTime() < DataManager.NextAutoSave then return end
+
+	for _, ply in player.Iterator() do
+		---@cast ply Player
+		if not ply:IsValid() then continue end
+
+		DataManager:SaveData(ply)
+	end
+
+	NSCOP.PrintDebug("Autosaved all player data")
+	DataManager.NextAutoSave = CurTime() + DataManager.AutosaveInterval
+end)
+
+--#region NetReceiving
+
+net.Receive(DataManager.NetworkMessage.CL_ClientReady, function(len, ply)
 	if not ply:IsValid() then return end
 
 	NSCOP.Utils.RunHook("NSCOP.PlayerLoaded", ply)
 end)
 
-net.Receive("NSCOP.DataManager.CL.InitControls", function(len, ply)
+net.Receive(DataManager.NetworkMessage.CL_InitControls, function(len, ply)
 	if not ply:IsValid() then return end
 
 	-- Do not initialize controls if the player already has them
@@ -172,7 +203,7 @@ net.Receive("NSCOP.DataManager.CL.InitControls", function(len, ply)
 	NSCOP.PrintDebug("Initialized controls for player: ", ply)
 end)
 
-net.Receive("NSCOP.DataManager.CL.SyncControls", function(len, ply)
+net.Receive(DataManager.NetworkMessage.CL_SyncControls, function(len, ply)
 	if not ply:IsValid() then return end
 
 	-- Do not sync controls if the player already has them
@@ -184,7 +215,7 @@ net.Receive("NSCOP.DataManager.CL.SyncControls", function(len, ply)
 	NSCOP.PrintDebug("Synced controls for player: ", ply)
 end)
 
-net.Receive("NSCOP.DataManager.CL.UpdateControlsKey", function(len, ply)
+net.Receive(DataManager.NetworkMessage.CL_UpdateControlsKey, function(len, ply)
 	if not ply:IsValid() then return end
 
 	if not ply.NSCOP or not ply.NSCOP.Controls then
@@ -209,3 +240,5 @@ net.Receive("NSCOP.DataManager.CL.UpdateControlsKey", function(len, ply)
 	NSCOP.PrintDebug("Updated controls key for player: ", ply)
 	NSCOP.PrintDebug("Key: ", key, "Old value: ", oldValue, "New value: ", newValue)
 end)
+
+--#endregion

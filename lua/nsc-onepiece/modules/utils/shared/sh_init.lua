@@ -41,6 +41,7 @@ end
 ---@overload fun(eventName: "PlayerDisconnected", identifier: string, func: fun(ply: Player))
 ---@overload fun(eventName: "HUDShouldDraw", identifier: string, func: fun(element: NSCOP.HUDBaseElement): boolean)
 ---@overload fun(eventName: "OnScreenSizeChanged", identifier: string, func: fun(oldWidth: number, oldHeight: number, newWidth: number, newHeight: number))
+---@overload fun(eventName: "Tick", identifier: string, func: fun())
 ---@overload fun(eventName: "ClientSignOnStateChanged", identifier: string, func: fun(userId: number, oldState: number, newState: number))
 ---@overload fun(eventName: "NSCOP.PlayerLoaded", identifier: string, func: fun(ply: Player))
 ---@overload fun(eventName: "NSCOP.ButtonStateChanged", identifier: string, func: fun(buttonData: NSCOP.ButtonData, lastState: NSCOP.ButtonState, newState: NSCOP.ButtonState))
