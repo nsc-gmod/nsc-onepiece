@@ -1,5 +1,7 @@
 {
-	// "Lua.diagnostics.disable": ["undefined-global"],
+	"Lua.format.defaultConfig": {
+		"max_line_length": "200"
+	},
 	"Lua.diagnostics.libraryFiles": "Disable",
 	"Lua.runtime.special": {
 		"include": "require",
