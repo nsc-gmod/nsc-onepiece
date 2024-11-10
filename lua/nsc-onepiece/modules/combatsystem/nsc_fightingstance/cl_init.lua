@@ -8,6 +8,8 @@ local screenScaleH = NSCOP.Utils.ScreenScaleH
 
 function FightingStance:DrawHUD()
 	self:DrawSkills()
+
+	surface.DrawLine(ScrW() / 2, ScrH(), ScrW() / 2, 0)
 end
 
 ---Draws the skills on the HUD
@@ -15,7 +17,9 @@ function FightingStance:DrawSkills()
 	local selectedSkill = self:GetSelectedSkill()
 
 	for i = 1, 6, 1 do
-		self:DrawSkill(screenScaleW(700 + (i - 1) * 90), screenScaleH(1050), i == selectedSkill)
+		local margin = 70
+		self:DrawSkill(screenScaleW(852.5, true) + screenScaleW((i - 1) * margin), screenScaleH(1050, true),
+			i == selectedSkill)
 	end
 end
 

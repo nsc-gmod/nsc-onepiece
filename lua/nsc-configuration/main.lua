@@ -15,4 +15,4 @@ NSCOP.Config.Main.AutosaveInterval = 60
 
 --#endregion
 
-NSCOP.Print("CONFIG LOADED")
+NSCOP.PrintDebug("CONFIG LOADED")
