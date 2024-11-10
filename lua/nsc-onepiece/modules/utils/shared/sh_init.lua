@@ -30,8 +30,8 @@ end
 ---@overload fun(eventName: "EntityTakeDamage", identifier: string, func: fun(target: Entity, dmginfo: CTakeDamageInfo))
 ---@overload fun(eventName: "KeyPress", identifier: string, func: fun(ply: Player, key: IN))
 ---@overload fun(eventName: "KeyRelease", identifier: string, func: fun(ply: Player, key: IN))
----@overload fun(eventName: "PlayerButtonDown", identifier: string, func: fun(ply: Player, button: BUTTON_CODE | KEY | MOUSE | JOYSTICK))
----@overload fun(eventName: "PlayerButtonUp", identifier: string, func: fun(ply: Player, button: BUTTON_CODE | KEY | MOUSE | JOYSTICK))
+---@overload fun(eventName: "PlayerButtonDown", identifier: string, func: fun(ply: Player, button: NSCOP.ButtonValue))
+---@overload fun(eventName: "PlayerButtonUp", identifier: string, func: fun(ply: Player, button: NSCOP.ButtonValue))
 ---@overload fun(eventName: "PlayerCanHearPlayersVoice", identifier: string, func: fun(listener: Player, talker: Player): boolean)
 ---@overload fun(eventName: "PlayerCanSeePlayersChat", identifier: string, func: fun(text: string, teamOnly: boolean, listener: Player, speaker: Player): boolean)
 ---@overload fun(eventName: "PlayerFootstep", identifier: string, func: fun(ply: Player, pos: Vector, foot: number, sound: string, volume: number, filter: CRecipientFilter): boolean)
@@ -42,8 +42,20 @@ end
 ---@overload fun(eventName: "HUDShouldDraw", identifier: string, func: fun(element: NSCOP.HUDBaseElement): boolean)
 ---@overload fun(eventName: "OnScreenSizeChanged", identifier: string, func: fun(oldWidth: number, oldHeight: number, newWidth: number, newHeight: number))
 ---@overload fun(eventName: "ClientSignOnStateChanged", identifier: string, func: fun(userId: number, oldState: number, newState: number))
+---@overload fun(eventName: "NSCOP.PlayerLoaded", identifier: string, func: fun(ply: Player))
+---@overload fun(eventName: "NSCOP.ButtonStateChanged", identifier: string, func: fun(buttonData: NSCOP.ButtonData, lastState: NSCOP.ButtonState, newState: NSCOP.ButtonState))
 function Utils.AddHook(eventName, identifier, func)
 	hook.Add(eventName, identifier, func)
+end
+
+---Type safe way to run a hook
+---<br>REALM: SHARED
+---@param eventName string The name of the event to run
+---@vararg any The arguments to pass to the hook. Maximum of 6 arguments
+---@overload fun(eventName: "NSCOP.PlayerLoaded", ply: Player)
+---@overload fun(eventName: "NSCOP.ButtonStateChanged", identifier: string, func: fun(buttonData: NSCOP.ButtonData, lastState: NSCOP.ButtonState, newState: NSCOP.ButtonState))
+function Utils.RunHook(eventName, ...)
+	hook.Run(eventName, ...)
 end
 
 -- TODO: Not sure if this should be in config module, or here

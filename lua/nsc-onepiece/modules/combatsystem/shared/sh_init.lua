@@ -1,3 +1,26 @@
+---@class Player
+local MPlayer = FindMetaTable("Player")
+
+-- TODO: Not the fastest way to get it, since it loops through all the controls, maybe this should be cached, or the controls should be a dictionary
+---Gets the button type of the player from the button value
+---<br>REALM: SHARED
+---@param button NSCOP.ButtonValue
+---@return NSCOP.ButtonType?
+function MPlayer:GetButtonType(button)
+	if not self.NSCOP or not self.NSCOP.Controls then
+		NSCOP.PrintDebug("Player has no controls data")
+		return
+	end
+
+	for key, value in ipairs(self.NSCOP.Controls) do
+		---@cast key NSCOP.ButtonType
+		---@cast value NSCOP.ButtonData
+		if value.Button == button then
+			return key
+		end
+	end
+end
+
 NSCOP.Utils.AddHook("PlayerButtonDown", "NSCOP.CombatSystem.PlayerButtonDown", function(ply, button)
 	if not ply:IsValid() then return end
 
@@ -6,19 +29,49 @@ NSCOP.Utils.AddHook("PlayerButtonDown", "NSCOP.CombatSystem.PlayerButtonDown", f
 	if not weapon:NSCOP_IsCombatSWEP() then return end
 	---@cast weapon FightingStance
 
-	-- TODO: Pretty experimental, I'm not sure if its going to be like this
-	if button == KEY_1 then
+	local actionType = ply:GetButtonType(button)
+	---@type NSCOP.ButtonData?
+	local buttonData = ply.NSCOP.Controls[actionType]
+
+	if buttonData then
+		local oldState = buttonData.State
+		buttonData.State = NSCOP.KeyState.Pressed
+		buttonData.StateTime = CurTime()
+
+		NSCOP.Utils.RunHook("NSCOP.ButtonStateChanged", buttonData, oldState, buttonData.State)
+		oldState = buttonData.State
+
+		timer.Simple(0, function()
+			if not ply:IsValid() then return end
+			if buttonData.State != NSCOP.KeyState.Pressed then return end
+
+			if buttonData then
+				buttonData.State = NSCOP.KeyState.Down
+				buttonData.StateTime = CurTime()
+
+				NSCOP.Utils.RunHook("NSCOP.ButtonStateChanged", buttonData, oldState, buttonData.State)
+			end
+		end)
+	end
+
+	if actionType == NSCOP.ButtonType.SelectSkillOne then
 		weapon:SetSelectedSkill(1)
-	elseif button == KEY_2 then
+	elseif actionType == NSCOP.ButtonType.SelectSkillTwo then
 		weapon:SetSelectedSkill(2)
-	elseif button == KEY_3 then
+	elseif actionType == NSCOP.ButtonType.SelectSkillThree then
 		weapon:SetSelectedSkill(3)
-	elseif button == KEY_4 then
+	elseif actionType == NSCOP.ButtonType.SelectSkillFour then
 		weapon:SetSelectedSkill(4)
-	elseif button == KEY_5 then
+	elseif actionType == NSCOP.ButtonType.SelectSkillFive then
 		weapon:SetSelectedSkill(5)
-	elseif button == KEY_6 then
+	elseif actionType == NSCOP.ButtonType.SelectSkillSix then
 		weapon:SetSelectedSkill(6)
+	end
+
+	local dodgeButton = ply.NSCOP.Controls[NSCOP.ButtonType.SkillDodge]
+
+	if button == KEY_SPACE and (dodgeButton.State == NSCOP.KeyState.Down or dodgeButton.State == NSCOP.KeyState.Pressed) then
+		weapon:Dodge(true)
 	end
 end)
 
@@ -30,4 +83,55 @@ NSCOP.Utils.AddHook("PlayerButtonUp", "NSCOP.CombatSystem.PlayerButtonUp", funct
 	if not weapon:NSCOP_IsCombatSWEP() then return end
 	---@cast weapon FightingStance
 
+	local actionType = ply:GetButtonType(button)
+	---@type NSCOP.ButtonData?
+	local buttonData = ply.NSCOP.Controls[actionType]
+
+	if buttonData then
+		local oldState = buttonData.State
+		buttonData.State = NSCOP.KeyState.Released
+		buttonData.StateTime = CurTime()
+
+		NSCOP.Utils.RunHook("NSCOP.ButtonStateChanged", buttonData, oldState, buttonData.State)
+		oldState = buttonData.State
+
+		timer.Simple(0, function()
+			if not ply:IsValid() then return end
+			if buttonData.State != NSCOP.KeyState.Released then return end
+
+			if buttonData then
+				buttonData.State = NSCOP.KeyState.Up
+				buttonData.StateTime = CurTime()
+
+				NSCOP.Utils.RunHook("NSCOP.ButtonStateChanged", buttonData, oldState, buttonData.State)
+			end
+		end)
+	end
+
+	if actionType == NSCOP.ButtonType.SkillDodge and not ply:KeyDown(IN_JUMP) then
+		weapon:Dodge()
+	end
+end)
+
+NSCOP.Utils.AddHook("NSCOP.ButtonStateChanged", "NSCOP.CombatSystem.ButtonStateChanged", function(buttonData, oldState, newState)
+	if not buttonData then return end
+
+	local oldStateName = ""
+	local newStateName = ""
+
+	for key, value in pairs(NSCOP.KeyState) do
+		if value == oldState then
+			oldStateName = key
+			break
+		end
+	end
+
+	for key, value in pairs(NSCOP.KeyState) do
+		if value == newState then
+			newStateName = key
+			break
+		end
+	end
+
+	NSCOP.PrintDebug("Button state changed: " .. " from " .. oldStateName .. " to " .. newStateName)
 end)
