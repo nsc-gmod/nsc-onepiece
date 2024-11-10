@@ -99,7 +99,8 @@ function FightingStance:Think()
 end
 
 -- TODO: Once skill system is implemented, this should be moved to a separate module, where it would have its own skill specification
-function FightingStance:Dodge()
+---@param aerial? boolean If the dodge is aerial, if so, then the player will dodge upwards
+function FightingStance:Dodge(aerial)
 	if CurTime() < self:GetNextDodge() then return end
 
 	local owner = self:GetOwner()
@@ -109,12 +110,16 @@ function FightingStance:Dodge()
 
 	local moveDirection = owner:NSCOP_GetMoveDirection(true)
 
+	if aerial then
+		moveDirection = vector_up
+	end
+
 	-- Fixes an issue where there is a velocity hickup when the player is in air
 	if (moveDirection == vector_origin) then return end
 
 	local finalForce = self.DodgeForce
 
-	if owner:OnGround() then
+	if owner:OnGround() and not aerial then
 		finalForce = finalForce * 3
 	end
 
@@ -143,6 +148,7 @@ end
 function FightingStance:ResetVars()
 	self:SetCombatStance(false)
 	self:SetCurrentCombo(0)
+
 	self:SetSelectedSkill(-1)
 end
 
