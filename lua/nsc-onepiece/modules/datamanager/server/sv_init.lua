@@ -33,7 +33,7 @@ util.AddNetworkString(DataManager.NetworkMessage.SV_SyncData)
 ---Writes the data of the player to the current net message
 ---<br>REALM: SERVER
 ---@param characterData NSCOP.CharacterData
-function DataManager:NetWriteCharacterData(characterData)
+function DataManager.NetWriteCharacterData(characterData)
 	net.WriteUInt(characterData.HairType, 4)
 	net.WriteUInt(characterData.NoseType, 4)
 	net.WriteUInt(characterData.EyeType, 4)
@@ -50,8 +50,8 @@ end
 ---Writes the inventory data of the player to the current net message
 ---<br>REALM: SERVER
 ---@param inventoryData integer[]
-function DataManager:NetWriteInventoryData(inventoryData)
-	DataManager:NetWriteSequentialTable(inventoryData, 16, 16)
+function DataManager.NetWriteInventoryData(inventoryData)
+	DataManager.NetWriteSequentialTable(inventoryData, 16, 16)
 
 	NSCOP.PrintDebug("Inventory data size", net.BytesWritten())
 end
@@ -59,8 +59,8 @@ end
 ---Writes the skills data of the player to the current net message
 ---<br>REALM: SERVER
 ---@param skillsData integer[]
-function DataManager:NetWriteSkillsData(skillsData)
-	DataManager:NetWriteSequentialTable(skillsData, 16, 8)
+function DataManager.NetWriteSkillsData(skillsData)
+	DataManager.NetWriteSequentialTable(skillsData, 16, 8)
 
 	NSCOP.PrintDebug("Skills data size", net.BytesWritten())
 end
@@ -68,19 +68,22 @@ end
 ---Loads the data of the player and sends it to the client. This won't work if the client already has loaded data for performance reasons
 ---<br>REALM: SERVER
 ---@param ply Player
-function DataManager:LoadData(ply)
-	local data = DataManager:GetDefaultData()
+function DataManager.LoadData(ply)
+	local data = DataManager.GetDefaultData()
 
 	if ply.NSCOP then
 		NSCOP.PrintDebug("Player already has data: ", ply, "avoiding loading data for performance reasons")
 		return
 	end
 
-	local playerExists = ply:GetPData("NSCOP_CharacterId", false)
+	local playerId = NSCOP.SQL.GetPlayerId(ply)
 
+	print(playerId, not playerId)
 	-- TODO: Export to its own function
 	-- Don't load data if the player already has them
-	if not playerExists then
+	if not playerId then
+		NSCOP.SQL.UpdatePlayerId(ply)
+
 		ply.NSCOP = {
 			PlayerData = data,
 		}
@@ -88,12 +91,13 @@ function DataManager:LoadData(ply)
 		net.Start(DataManager.NetworkMessage.SV_InitData)
 		net.Send(ply)
 
-		DataManager:LoadCharacterAppearance(ply)
+		DataManager.LoadCharacterAppearance(ply)
 
 		NSCOP.PrintDebug("Initialized data for player: ", ply)
 		return
 	end
 
+	data.PlayerId = playerId
 	data.CharacterId = ply:NSCOP_GetPlayerDbNumber("NSCOP_CharacterId", data.CharacterId)
 	data.CharacterData = ply:NSCOP_GetPlayerDbTable("NSCOP_CharacterData", data.CharacterData)
 	data.Profession = ply:NSCOP_GetPlayerDbNumber("NSCOP_Profession", data.Profession)
@@ -111,7 +115,7 @@ function DataManager:LoadData(ply)
 	net.Start(DataManager.NetworkMessage.SV_SyncData)
 	net.WriteUInt(data.CharacterId, 2)
 	net.WriteString(data.CharacterName)
-	DataManager:NetWriteCharacterData(data.CharacterData)
+	DataManager.NetWriteCharacterData(data.CharacterData)
 	net.WriteUInt(data.Race, 2)
 	net.WriteUInt(data.Profession, 2)
 	net.WriteUInt(data.Class, 3)
@@ -119,11 +123,11 @@ function DataManager:LoadData(ply)
 	net.WriteFloat(data.Experience)
 	net.WriteUInt(data.SkillPoints, 8)
 	net.WriteUInt(data.Money, 32)
-	DataManager:NetWriteInventoryData(data.Inventory)
-	DataManager:NetWriteSkillsData(data.Skills)
+	DataManager.NetWriteInventoryData(data.Inventory)
+	DataManager.NetWriteSkillsData(data.Skills)
 	net.Send(ply)
 
-	DataManager:LoadCharacterAppearance(ply)
+	DataManager.LoadCharacterAppearance(ply)
 
 	NSCOP.PrintDebug("Loaded data for player: ", ply)
 end
@@ -131,7 +135,7 @@ end
 ---Saves the data of the player to the database
 ---<br>REALM: SERVER
 ---@param ply Player
-function DataManager:SaveData(ply)
+function DataManager.SaveData(ply)
 	if not ply.NSCOP then
 		NSCOP.PrintDebug("Player does not have the NSCOP table: ", ply)
 		return
@@ -168,7 +172,7 @@ NSCOP.Utils.AddHook("NSCOP.PlayerLoaded", "NSCOP.DataManager.PlayerLoaded", func
 
 	NSCOP.PrintDebug("Player loaded: ", ply)
 
-	DataManager:LoadData(ply)
+	DataManager.LoadData(ply)
 end)
 
 NSCOP.Utils.AddHook("PlayerDisconnected", "NSCOP.DataManager.PlayerDisconnected", function(ply)
@@ -185,7 +189,7 @@ NSCOP.Utils.AddHook("Tick", "NSCOP.DataManager.Autosave", function()
 		---@cast ply Player
 		if not ply:IsValid() then continue end
 
-		DataManager:SaveData(ply)
+		DataManager.SaveData(ply)
 	end
 
 	NSCOP.PrintDebug("Autosaved all player data")
@@ -207,7 +211,7 @@ net.Receive(DataManager.NetworkMessage.CL_InitControls, function(len, ply)
 	if ply.NSCOP and ply.NSCOP.Controls then return end
 
 	ply.NSCOP = ply.NSCOP or {}
-	ply.NSCOP.Controls = DataManager:GetDefaultControls()
+	ply.NSCOP.Controls = DataManager.GetDefaultControls()
 
 	NSCOP.PrintDebug("Initialized controls for player: ", ply)
 end)
@@ -219,7 +223,7 @@ net.Receive(DataManager.NetworkMessage.CL_SyncControls, function(len, ply)
 	if ply.NSCOP and ply.NSCOP.Controls then return end
 
 	ply.NSCOP = ply.NSCOP or {}
-	ply.NSCOP.Controls = DataManager:NetReadControls()
+	ply.NSCOP.Controls = DataManager.NetReadControls()
 
 	NSCOP.PrintDebug("Synced controls for player: ", ply)
 end)
@@ -275,7 +279,7 @@ concommand.Add("nscop_savedata_sv", function(ply, cmd, args, argStr)
 		end
 	end
 
-	DataManager:SaveData(ply)
+	DataManager.SaveData(ply)
 end, function(cmd, argStr, args)
 	return NSCOP.Utils.GetPlayersAutocomplete("nscop_savedata_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
 end)

@@ -96,6 +96,7 @@ NSCOP.BodyGroup = {
 ---@field Outfit integer
 
 ---@class NSCOP.PlayerData
+---@field PlayerId integer
 ---@field CharacterId integer
 ---@field CharacterName string
 ---@field CharacterData NSCOP.CharacterData
@@ -122,7 +123,7 @@ NSCOP.BodyGroup = {
 ---@param data T
 ---@param lengthBits integer
 ---@param keyBits integer
-function DataManager:NetWriteSequentialTable(data, lengthBits, keyBits)
+function DataManager.NetWriteSequentialTable(data, lengthBits, keyBits)
 	local length = #data
 
 	net.WriteUInt(length, lengthBits)
@@ -135,9 +136,10 @@ end
 ---<br>REALM: SHARED
 ---@nodiscard
 ---@return NSCOP.PlayerData
-function DataManager:GetDefaultData()
+function DataManager.GetDefaultData()
 	---@type NSCOP.PlayerData
 	local playerData = {
+		PlayerId = 0,
 		CharacterId = 0,
 		CharacterName = "",
 		CharacterData = {
@@ -180,7 +182,7 @@ end
 ---<br>REALM: SHARED
 ---@nodiscard
 ---@return NSCOP.Controls
-function DataManager:GetDefaultControls()
+function DataManager.GetDefaultControls()
 	---@type NSCOP.Controls
 	local controls = {
 		[NSCOP.ButtonType.SelectSkillOne] = { Button = KEY_1, State = NSCOP.KeyState.Up, StateTime = 0 },
@@ -245,7 +247,7 @@ end
 ---Writes the controls data to the current net message
 ---<br>REALM: SHARED
 ---@param controlsData NSCOP.Controls
-function DataManager:NetWriteControls(controlsData)
+function DataManager.NetWriteControls(controlsData)
 	local controlsLength = #controlsData
 
 	net.WriteUInt(controlsLength, 6)
@@ -263,10 +265,10 @@ end
 ---<br>REALM: SHARED
 ---@nodiscard
 ---@return NSCOP.Controls controls
-function DataManager:NetReadControls()
+function DataManager.NetReadControls()
 	local controlsLength = net.ReadUInt(6)
 	---@type NSCOP.Controls
-	local controlsData = DataManager:GetDefaultControls()
+	local controlsData = DataManager.GetDefaultControls()
 
 	for i = 1, controlsLength do
 		controlsData[i].Button = net.ReadUInt(8)
@@ -275,10 +277,11 @@ function DataManager:NetReadControls()
 	return controlsData
 end
 
+-- TODO: Move this somewhere else
 --Loads the character on the player entity
 ---<br>REALM: SHARED
 ---@param ply Player
-function DataManager:LoadCharacterAppearance(ply)
+function DataManager.LoadCharacterAppearance(ply)
 	if not ply:IsValid() then return end
 
 	if not ply.NSCOP then

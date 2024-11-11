@@ -6,9 +6,9 @@ local DataManager = NSCOP.DataManager
 
 ---Loads the controls for the player and syncs them with the server
 ---<br>REALM: CLIENT
-function DataManager:LoadControls()
+function DataManager.LoadControls()
 	local ply = LocalPlayer()
-	local defaultControls = self:GetDefaultControls()
+	local defaultControls = DataManager.GetDefaultControls()
 
 	if ply.NSCOP then
 		NSCOP.PrintDebug("Player already has controls: ", ply, "avoiding loading controls for performance reasons")
@@ -23,8 +23,8 @@ function DataManager:LoadControls()
 		ply.NSCOP.Controls = defaultControls
 
 		net.Start(DataManager.NetworkMessage.CL_InitControls)
-        net.SendToServer()
-		
+		net.SendToServer()
+
 		NSCOP.PrintDebug("Initialized controls for player: ", ply)
 		return
 	end
@@ -36,14 +36,14 @@ function DataManager:LoadControls()
 	ply.NSCOP.Controls = data
 
 	net.Start(DataManager.NetworkMessage.CL_SyncControls)
-	DataManager:NetWriteControls(data)
+	DataManager.NetWriteControls(data)
 	net.SendToServer()
 
 	NSCOP.PrintDebug("Loaded controls for player: ", ply)
 	PrintTable(data)
 end
 
-function DataManager:SaveControls()
+function DataManager.SaveControls()
 	local ply = LocalPlayer()
 
 	ply:SetPData("NSCOP_Controls", util.TableToJSON(ply.NSCOP.Controls))
@@ -53,7 +53,7 @@ end
 ---<br>REALM: CLIENT
 ---@param key NSCOP.ButtonType?
 ---@param newValue NSCOP.ButtonValue?
-function DataManager:UpdateControlsKey(key, newValue)
+function DataManager.UpdateControlsKey(key, newValue)
 	local ply = LocalPlayer()
 
 	if not key or key > 255 or key < 0 then
@@ -94,7 +94,7 @@ end
 ---<br>REALM: CLIENT
 ---@nodiscard
 ---@return NSCOP.CharacterData
-function DataManager:NetReadCharacterData()
+function DataManager.NetReadCharacterData()
 	---@type NSCOP.CharacterData
 	local characterData = {
 		HairType = net.ReadUInt(4),
@@ -116,7 +116,7 @@ end
 ---<br>REALM: CLIENT
 ---@nodiscard
 ---@return integer[]
-function DataManager:NetReadInventoryData()
+function DataManager.NetReadInventoryData()
 	local inventoryLength = net.ReadUInt(16)
 	local inventoryData = {}
 
@@ -131,7 +131,7 @@ end
 ---<br>REALM: CLIENT
 ---@nodiscard
 ---@return integer[]
-function DataManager:NetReadSkillsData()
+function DataManager.NetReadSkillsData()
 	local skillsLength = net.ReadUInt(16)
 	local skillsData = {}
 
@@ -146,12 +146,13 @@ end
 ---<br>REALM: CLIENT
 ---@nodiscard
 ---@return NSCOP.PlayerData
-function DataManager:NetReadPlayerData()
+function DataManager.NetReadPlayerData()
 	---@type NSCOP.PlayerData
 	local playerData = {
+		PlayerId = -1,
 		CharacterId = net.ReadUInt(2),
 		CharacterName = net.ReadString(),
-		CharacterData = self:NetReadCharacterData(),
+		CharacterData = DataManager.NetReadCharacterData(),
 		Race = net.ReadUInt(2),
 		Profession = net.ReadUInt(2),
 		Class = net.ReadUInt(3),
@@ -159,8 +160,8 @@ function DataManager:NetReadPlayerData()
 		Experience = net.ReadFloat(),
 		SkillPoints = net.ReadUInt(8),
 		Money = net.ReadUInt(32),
-		Inventory = self:NetReadInventoryData(),
-		Skills = self:NetReadSkillsData(),
+		Inventory = DataManager.NetReadInventoryData(),
+		Skills = DataManager.NetReadSkillsData(),
 	}
 
 	return playerData
@@ -176,28 +177,28 @@ NSCOP.Utils.AddHook("NSCOP.PlayerLoaded", "NSCOP.DataManager.PlayerLoaded", func
 	net.Start(DataManager.NetworkMessage.CL_ClientReady)
 	net.SendToServer()
 
-	DataManager:LoadControls()
+	DataManager.LoadControls()
 end)
 
 net.Receive(DataManager.NetworkMessage.SV_InitData, function()
 	local ply = LocalPlayer()
 
-	local defaultData = DataManager:GetDefaultData()
-	local defaultControls = DataManager:GetDefaultControls()
+	local defaultData = DataManager.GetDefaultData()
+	local defaultControls = DataManager.GetDefaultControls()
 
 	ply.NSCOP = {
 		PlayerData = defaultData,
 		Controls = defaultControls
 	}
 
-	DataManager:LoadCharacterAppearance(ply)
+	DataManager.LoadCharacterAppearance(ply)
 
 	NSCOP.PrintDebug("Initialized and loaded default data for player: ", ply:GetName())
 end)
 
 net.Receive(DataManager.NetworkMessage.SV_SyncData, function(len)
 	---@type NSCOP.PlayerData
-	local data = DataManager:NetReadPlayerData()
+	local data = DataManager.NetReadPlayerData()
 
 	NSCOP.PrintDebug("Net message size for key:", "NSCOP.DataManager.SyncData", len, "bits,", len / 8, "bytes",
 		len / 8 / 1024, "KB")
@@ -210,7 +211,7 @@ net.Receive(DataManager.NetworkMessage.SV_SyncData, function(len)
 		Controls = ply.NSCOP.Controls or {}
 	}
 
-	DataManager:LoadCharacterAppearance(ply)
+	DataManager.LoadCharacterAppearance(ply)
 end)
 
 --#region ConCommands
@@ -231,7 +232,7 @@ concommand.Add("nscop_update_controls_key_cl", function(ply, cmd, args, argStr)
 		return
 	end
 
-	DataManager:UpdateControlsKey(key, value)
+	DataManager.UpdateControlsKey(key, value)
 end)
 
 --#endregion
