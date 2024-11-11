@@ -34,9 +34,9 @@ function NSCOP.Skill.RegisterSkill(skillData)
 	if ! skillId then
 		NSCOP.Print("Trying to create a skill without an id! (ID: " .. (skillId or "n/a") .. ", SKILLNAME: " .. (skillData.SkillName or "n/a") .. ")")
 		return
-	elseif NSCOP.Skill.GetAllSkills()[skillId] then
-		NSCOP.Print("Trying to create a skill with an already occupied id! (ID: " .. (skillId or "n/a") .. ", SKILLNAME: " .. (skillData.SkillName or "n/a") .. ")")
-		return
+		-- elseif NSCOP.Skill.GetAllSkills()[skillId] then
+		-- 	NSCOP.Print("Trying to create a skill with an already occupied id! (ID: " .. (skillId or "n/a") .. ", SKILLNAME: " .. (skillData.SkillName or "n/a") .. ")")
+		-- 	return
 	end
 
 	---The skill's ID that will be used in code. Using an id of already existing skill may cause serious issues
@@ -67,19 +67,26 @@ function NSCOP.Skill.RegisterSkill(skillData)
 	return self
 end
 
----Creates all registered skills
+---Returns all registered skills
 ---@return table | nil All registered skills
 function NSCOP.Skill.GetAllSkills()
 	return NSCOP.Skill.RegisteredSkills
 end
 
----<br> REALM: SHARED
+---Looks for the existing Skill by an Id
+---@param id integer
+---@return NSCOP.Skill | nil Skill with the matched Id
+function NSCOP.Skill.GetSkillByID(id)
+	return NSCOP.Skill.GetAllSkills()[id]
+end
+
 ---Creates an instance of a Skill
----@return NSCOP.SkillInstance | nil Created Skill instance
+---<br> REALM: SHARED
+---@return NSCOP.SkillInstance skillInstance Created Skill instance
 function NSCOP.Skill:CreateInstance()
-	---@class NSCOP.SkillInstance
-	local instance = {}
-	setmetatable(instance, self)
+	---@class NSCOP.SkillInstance : NSCOP.Skill
+	local instance = table.Copy(self)
+	setmetatable(instance, NSCOP.SkillInstance) 
 
 	---@type NSCOP.Skill
 	instance.Skill = self
@@ -89,7 +96,7 @@ function NSCOP.Skill:CreateInstance()
 	instance.GetAllSkills = nil
 
 	---@type integer
-	instance.InstanceId = table.insert( NSCOP.SkillInstance.AllInstances(), instance )
+	instance.InstanceId = table.insert(NSCOP.SkillInstance.AllInstances(), instance)
 
 	return instance --- SkillInstance object
 end
@@ -102,4 +109,9 @@ end
 -----@return NSCOP.Skill The Skill that the instance is derived from
 function NSCOP.SkillInstance:GetSkill()
 	return self.Skill
+end
+
+---@param weapon NSCOP.FightingStance
+function NSCOP.SkillInstance:AssignWeapon(weapon)
+	self.Weapon = weapon
 end

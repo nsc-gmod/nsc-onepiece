@@ -25,6 +25,8 @@ NSCOP.FightingStance.Purpose = "Combat"
 NSCOP.FightingStance.Instructions = "Left click to attack, right click to block"
 NSCOP.FightingStance.Category = "NSC One Piece RP"
 
+NSCOP.FightingStance.SkillInstances = NSCOP.FightingStance.SkillInstances or {}
+
 NSCOP.FightingStance.Spawnable = true
 NSCOP.FightingStance.AdminOnly = false
 
@@ -45,6 +47,24 @@ function NSCOP.FightingStance:SetupDataTables()
 	NSCOP.Utils.NetworkVar(self, "Float", "NextDodge")
 end
 
+function NSCOP.FightingStance:CreateSkillInstance(skillId)
+	local skill = NSCOP.Skill.GetSkillByID(skillId)
+
+	if ! skill then
+		NSCOP.Print("Invalid Skill ID! id " .. skillId)
+		return
+	end
+
+	local newInstance = skill:CreateInstance()
+	newInstance:AssignWeapon(self)
+
+	self.SkillInstances[newInstance.SkillID] = newInstance
+end
+
+function NSCOP.FightingStance:GetSkillInstance(skillId)
+	return self.SkillInstances[skillId]
+end
+
 function NSCOP.FightingStance:Initialize()
 	self:ResetCooldowns()
 	self:ResetVars()
@@ -52,6 +72,7 @@ function NSCOP.FightingStance:Initialize()
 end
 
 function NSCOP.FightingStance:Deploy()
+
 end
 
 function NSCOP.FightingStance:Holster()
@@ -63,6 +84,8 @@ function NSCOP.FightingStance:PrimaryAttack()
 	if not self:GetCombatStance() then return end
 
 	NSCOP.Print("Primary Attack")
+	local testInstance = self:GetSkillInstance(1000)
+	testInstance:DoCrazyShit()
 
 	self:IncreaseCombo()
 	self:SetNextPrimaryFire(CurTime() + self.PrimaryCD)
@@ -90,12 +113,15 @@ function NSCOP.FightingStance:SecondaryAttack()
 end
 
 function NSCOP.FightingStance:Reload()
-	if not self:GetCombatStance() then return end
-
-	self:Dodge()
+	self:SetCombatStance(not self:GetCombatStance())
 end
 
 function NSCOP.FightingStance:Think()
+	local owner = self:GetOwner()
+
+	if ! self:GetSkillInstance(1000) then
+		self:CreateSkillInstance(1000)
+	end
 end
 
 -- TODO: Once skill system is implemented, this should be moved to a separate module, where it would have its own skill specification
@@ -168,5 +194,3 @@ NSCOP.IncludeServer("sv_init.lua")
 NSCOP.IncludeClient("cl_init.lua")
 
 weapons.Register(NSCOP.FightingStance, "nsc_fightingstance")
-
----@diagnostic disable-next-line: assign-type-mismatch

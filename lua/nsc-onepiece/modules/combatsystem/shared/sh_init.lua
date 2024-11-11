@@ -34,7 +34,7 @@ NSCOP.Utils.AddHook("PlayerButtonDown", "NSCOP.CombatSystem.PlayerButtonDown", f
 	local weapon = ply:GetActiveWeapon()
 	if not weapon:IsValid() then return end
 	if not weapon:NSCOP_IsCombatSWEP() then return end
-	---@cast weapon FightingStance
+	---@cast weapon NSCOP.FightingStance
 
 	local actionType = ply:GetButtonType(button)
 	---@type NSCOP.ButtonData?
@@ -88,7 +88,7 @@ NSCOP.Utils.AddHook("PlayerButtonUp", "NSCOP.CombatSystem.PlayerButtonUp", funct
 	local weapon = ply:GetActiveWeapon()
 	if not weapon:IsValid() then return end
 	if not weapon:NSCOP_IsCombatSWEP() then return end
-	---@cast weapon FightingStance
+	---@cast weapon NSCOP.FightingStance
 
 	local actionType = ply:GetButtonType(button)
 	---@type NSCOP.ButtonData?

@@ -1,2 +1,2 @@
----@class FightingStance: SWEP
+---@class NSCOP.FightingStance: SWEP
 local FightingStance = {}
