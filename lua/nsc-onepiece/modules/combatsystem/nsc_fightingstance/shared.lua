@@ -1,43 +1,43 @@
----@class FightingStance: SWEP
+---@class NSCOP.FightingStance: SWEP
 ---@
 ---@field GetCombatStance fun(): boolean Gets the current combat stance
----@field SetCombatStance fun(self: FightingStance, newValue: boolean) Sets the combat stance
+---@field SetCombatStance fun(self: NSCOP.FightingStance, newValue: boolean) Sets the combat stance
 ---@
 ---@field GetCombatStyle fun(): boolean Gets the current combat style
----@field SetCombatStyle fun(self: FightingStance, newValue: boolean) Sets the combat style. Probably shouldnt be used during combat
+---@field SetCombatStyle fun(self: NSCOP.FightingStance, newValue: boolean) Sets the combat style. Probably shouldnt be used during combat
 ---@
 ---@field GetCurrentCombo fun(): integer Gets the current combo
----@field SetCurrentCombo fun(self: FightingStance, newValue: integer) Sets the current combo
+---@field SetCurrentCombo fun(self: NSCOP.FightingStance, newValue: integer) Sets the current combo
 ---@
 ---@field GetNextDodge fun(): number Gets the time when the player can dodge again
----@field SetNextDodge fun(self: FightingStance, newValue: number) Sets the time when the player can dodge again (Should be used with CurTime)
+---@field SetNextDodge fun(self: NSCOP.FightingStance, newValue: number) Sets the time when the player can dodge again (Should be used with CurTime)
 ---@
 ---@field GetSelectedSkill fun(): integer Gets the selected skill, -1 means no skill selected
----@field SetSelectedSkill fun(self: FightingStance, newValue: integer) Sets the selected skill, -1 means no skill selected
+---@field SetSelectedSkill fun(self: NSCOP.FightingStance, newValue: integer) Sets the selected skill, -1 means no skill selected
 
----@class FightingStance: SWEP
-FightingStance = {}
+---@class NSCOP.FightingStance: SWEP
+NSCOP.FightingStance = {}
 
-FightingStance.PrintName = "Fighting Stance"
-FightingStance.Author = "NSC One Piece RP"
-FightingStance.Contact = "Your Contact"
-FightingStance.Purpose = "Combat"
-FightingStance.Instructions = "Left click to attack, right click to block"
-FightingStance.Category = "NSC One Piece RP"
+NSCOP.FightingStance.PrintName = "Fighting Stance"
+NSCOP.FightingStance.Author = "NSC One Piece RP"
+NSCOP.FightingStance.Contact = "Your Contact"
+NSCOP.FightingStance.Purpose = "Combat"
+NSCOP.FightingStance.Instructions = "Left click to attack, right click to block"
+NSCOP.FightingStance.Category = "NSC One Piece RP"
 
-FightingStance.Spawnable = true
-FightingStance.AdminOnly = false
+NSCOP.FightingStance.Spawnable = true
+NSCOP.FightingStance.AdminOnly = false
 
-FightingStance.MaxCombo = 5
+NSCOP.FightingStance.MaxCombo = 5
 
-FightingStance.PrimaryCD = 0.1
-FightingStance.SecondaryCD = 0.1
+NSCOP.FightingStance.PrimaryCD = 0.1
+NSCOP.FightingStance.SecondaryCD = 0.1
 
-FightingStance.CanDodge = true
-FightingStance.DodgeForce = 600
-FightingStance.DodgeCD = 0.25
+NSCOP.FightingStance.CanDodge = true
+NSCOP.FightingStance.DodgeForce = 600
+NSCOP.FightingStance.DodgeCD = 0.25
 
-function FightingStance:SetupDataTables()
+function NSCOP.FightingStance:SetupDataTables()
 	NSCOP.Utils.NetworkVar(self, "Bool", "CombatStance")
 	NSCOP.Utils.NetworkVar(self, "Int", "CombatStyle")
 	NSCOP.Utils.NetworkVar(self, "Int", "CurrentCombo")
@@ -45,21 +45,21 @@ function FightingStance:SetupDataTables()
 	NSCOP.Utils.NetworkVar(self, "Float", "NextDodge")
 end
 
-function FightingStance:Initialize()
+function NSCOP.FightingStance:Initialize()
 	self:ResetCooldowns()
 	self:ResetVars()
 	self:SetCombatStance(true)
 end
 
-function FightingStance:Deploy()
+function NSCOP.FightingStance:Deploy()
 end
 
-function FightingStance:Holster()
+function NSCOP.FightingStance:Holster()
 	self:ResetVars()
 	return true
 end
 
-function FightingStance:PrimaryAttack()
+function NSCOP.FightingStance:PrimaryAttack()
 	if not self:GetCombatStance() then return end
 
 	NSCOP.Print("Primary Attack")
@@ -68,7 +68,7 @@ function FightingStance:PrimaryAttack()
 	self:SetNextPrimaryFire(CurTime() + self.PrimaryCD)
 end
 
-function FightingStance:SecondaryAttack()
+function NSCOP.FightingStance:SecondaryAttack()
 	if not self:GetCombatStance() then return end
 
 	local owner = self:GetOwner()
@@ -89,17 +89,18 @@ function FightingStance:SecondaryAttack()
 	self:SetNextSecondaryFire(CurTime() + self.SecondaryCD)
 end
 
-function FightingStance:Reload()
+function NSCOP.FightingStance:Reload()
 	if not self:GetCombatStance() then return end
 
 	self:Dodge()
 end
 
-function FightingStance:Think()
+function NSCOP.FightingStance:Think()
 end
 
 -- TODO: Once skill system is implemented, this should be moved to a separate module, where it would have its own skill specification
-function FightingStance:Dodge()
+---@param aerial? boolean If the dodge is aerial, if so, then the player will dodge upwards
+function NSCOP.FightingStance:Dodge(aerial)
 	if CurTime() < self:GetNextDodge() then return end
 
 	local owner = self:GetOwner()
@@ -109,12 +110,16 @@ function FightingStance:Dodge()
 
 	local moveDirection = owner:NSCOP_GetMoveDirection(true)
 
+	if aerial then
+		moveDirection = vector_up
+	end
+
 	-- Fixes an issue where there is a velocity hickup when the player is in air
 	if (moveDirection == vector_origin) then return end
 
 	local finalForce = self.DodgeForce
 
-	if owner:OnGround() then
+	if owner:OnGround() and not aerial then
 		finalForce = finalForce * 3
 	end
 
@@ -129,7 +134,7 @@ end
 --#region Helpers
 
 ---Increases the current combo until it reaches the max combo, then resets it
-function FightingStance:IncreaseCombo()
+function NSCOP.FightingStance:IncreaseCombo()
 	local currentCombo = self:GetCurrentCombo()
 
 	if currentCombo >= self.MaxCombo then
@@ -140,14 +145,15 @@ function FightingStance:IncreaseCombo()
 end
 
 ---Resets all variables to their default values
-function FightingStance:ResetVars()
+function NSCOP.FightingStance:ResetVars()
 	self:SetCombatStance(false)
 	self:SetCurrentCombo(0)
+
 	self:SetSelectedSkill(-1)
 end
 
 ---Resets and starts all cooldowns. This is called upon Initialization, so that players can't spam actions right after gaining the swep
-function FightingStance:ResetCooldowns()
+function NSCOP.FightingStance:ResetCooldowns()
 	local curTime = CurTime()
 
 	self:SetNextPrimaryFire(curTime + self.PrimaryCD)
@@ -161,7 +167,6 @@ end
 NSCOP.IncludeServer("sv_init.lua")
 NSCOP.IncludeClient("cl_init.lua")
 
-weapons.Register(FightingStance, "nsc_fightingstance")
+weapons.Register(NSCOP.FightingStance, "nsc_fightingstance")
 
 ---@diagnostic disable-next-line: assign-type-mismatch
-FightingStance = nil

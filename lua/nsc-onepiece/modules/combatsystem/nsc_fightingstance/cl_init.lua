@@ -1,4 +1,4 @@
----@class FightingStance: SWEP
+---@class NSCOP.FightingStance: SWEP
 
 local skillRect = Material("nsc-onepiece/hud/skillRect.vmt")
 local skillRectActive = Material("nsc-onepiece/hud/skillRect_Active.vmt")
@@ -6,20 +6,24 @@ local skillRectActive = Material("nsc-onepiece/hud/skillRect_Active.vmt")
 local screenScaleW = NSCOP.Utils.ScreenScaleW
 local screenScaleH = NSCOP.Utils.ScreenScaleH
 
-function FightingStance:DrawHUD()
+function NSCOP.FightingStance:DrawHUD()
 	self:DrawSkills()
+
+	surface.DrawLine(ScrW() / 2, ScrH(), ScrW() / 2, 0)
 end
 
 ---Draws the skills on the HUD
-function FightingStance:DrawSkills()
+function NSCOP.FightingStance:DrawSkills()
 	local selectedSkill = self:GetSelectedSkill()
 
 	for i = 1, 6, 1 do
-		self:DrawSkill(screenScaleW(700 + (i - 1) * 90), screenScaleH(1050), i == selectedSkill)
+		local margin = 70
+		self:DrawSkill(screenScaleW(852.5, true) + screenScaleW((i - 1) * margin), screenScaleH(1050, true),
+			i == selectedSkill)
 	end
 end
 
-function FightingStance:DrawSkill(x, y, active)
+function NSCOP.FightingStance:DrawSkill(x, y, active)
 	local finalMat = skillRect
 	local skillSize = screenScaleW(64)
 
@@ -33,7 +37,7 @@ function FightingStance:DrawSkill(x, y, active)
 end
 
 ---@param element NSCOP.HUDBaseElement
-function FightingStance:HUDShouldDraw(element)
+function NSCOP.FightingStance:HUDShouldDraw(element)
 	local isInCombatStance = self:GetCombatStance()
 
 	if isInCombatStance and element == "CHudWeaponSelection" then

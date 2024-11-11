@@ -10,9 +10,9 @@ NSCOP.Config.Main.ModulesEnabled[NSCOP.Modules.DataManager] = true  -- The DataM
 
 -- TODO: Should be probably moved to NSCOP.Config.DataManager
 NSCOP.Config.Main.AutosaveEnabled = true
-NSCOP.Config.Main.AutosaveInterval = 60
+NSCOP.Config.Main.AutosaveInterval = 300
 --// Put the configurations you consider the main ones there
 
 --#endregion
 
-NSCOP.Print("CONFIG LOADED")
+NSCOP.PrintDebug("CONFIG LOADED")
