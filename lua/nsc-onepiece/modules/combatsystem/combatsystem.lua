@@ -4,12 +4,15 @@ NSCOP.IncludeShared("shared/sh_init.lua")
 NSCOP.IncludeServer("server/sv_init.lua")
 NSCOP.IncludeClient("client/cl_init.lua")
 
--- Skills
-NSCOP.IncludeShared("skills/sh_skills.lua")
-NSCOP.IncludeServer("skills/sv_skills.lua")
-NSCOP.IncludeClient("skills/cl_skills.lua")
+-- Skill System
+NSCOP.IncludeShared("skillsystem/sh_skillsystem.lua")
+NSCOP.IncludeServer("skillsystem/sv_skillsystem.lua")
+NSCOP.IncludeClient("skillsystem/cl_skillsystem.lua")
 
 -- Fighting Stance
 NSCOP.IncludeShared("nsc_fightingstance/shared.lua")
+
+-- The skills
+NSCOP.LoadSkill("skills/test")
 
 NSCOP.PrintFileLoaded()

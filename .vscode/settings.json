@@ -4,9 +4,24 @@
 	},
 	"Lua.diagnostics.libraryFiles": "Disable",
 	"Lua.runtime.special": {
-		"include": "require",
-		"IncludeCS": "require"
+		"include": "dofile",
+		"IncludeCS": "dofile"
 	},
-	"Lua.runtime.nonstandardSymbol": ["continue", "&&", "||", "!=", "!", "//"],
-	"Lua.workspace.library": ["${addons}/garrysmod/module/library"]
+	"Lua.runtime.nonstandardSymbol": [
+		"continue",
+		"&&",
+		"||",
+		"!=",
+		"!",
+		"//",
+		"/**/"
+	],
+	"Lua.workspace.library": [
+		"${addons}/garrysmod/module/library"
+	],
+	"Lua.workspace.checkThirdParty": false,
+	"Lua.runtime.version": "LuaJIT",
+	"Lua.diagnostics.disable": [
+		"duplicate-set-field"
+	]
 }

@@ -7,15 +7,15 @@ NSCOP.Skill.RegisteredSkills = NSCOP.Skill.RegisteredSkills or {}
 ---@class NSCOP.SkillInstance : NSCOP.Skill
 NSCOP.SkillInstance = NSCOP.SkillInstance or {}
 NSCOP.SkillInstance.__index = NSCOP.SkillInstance
+NSCOP.SkillInstance.Instances = NSCOP.SkillInstance.Instances or {}
 
 ---@class NSCOP.SkillData
 ---@field SkillId integer
----@field SkillName string
----@field SkillDescription string
----@field SkillIcon string
+---@field SkillName string | nil
+---@field SkillDescription string | nil
+---@field SkillIcon string | nil
 ---@field SkillFunctionalData table | nil
 
--- we need to include the skills
 ---@enum NSCOP.Skills
 NSCOP.Skill.SkillIDs = {
 	BasicAttack = 1,
@@ -73,6 +73,7 @@ function NSCOP.Skill.GetAllSkills()
 	return NSCOP.Skill.RegisteredSkills
 end
 
+---<br> REALM: SHARED
 ---Creates an instance of a Skill
 ---@return NSCOP.SkillInstance | nil Created Skill instance
 function NSCOP.Skill:CreateInstance()
@@ -87,7 +88,15 @@ function NSCOP.Skill:CreateInstance()
 	instance.CreateInstance = nil
 	instance.GetAllSkills = nil
 
+	---@type integer
+	instance.InstanceId = table.insert( NSCOP.SkillInstance.AllInstances(), instance )
+
 	return instance --- SkillInstance object
+end
+
+-----@return table All existing Skill instances
+function NSCOP.SkillInstance.AllInstances()
+	return NSCOP.SkillInstance.Instances
 end
 
 -----@return NSCOP.Skill The Skill that the instance is derived from

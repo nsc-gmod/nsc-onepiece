@@ -1,3 +1,10 @@
+---@param path string
+function NSCOP.LoadSkill(path)
+	NSCOP.IncludeShared(path .. "/shared.lua")
+	NSCOP.IncludeServer(path .. "/server.lua")
+	NSCOP.IncludeClient(path .. "/client.lua")
+end
+
 ---@class Player
 local MPlayer = FindMetaTable("Player")
 
