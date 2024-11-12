@@ -113,6 +113,7 @@ NSCOP.BodyGroup = {
 ---@class Player.NSCOP
 ---@field PlayerData? NSCOP.PlayerData
 ---@field Controls? NSCOP.Controls
+---@field IFramesTime? number Invincibility frames time
 
 ---@class Player
 ---@field NSCOP? Player.NSCOP
@@ -275,39 +276,6 @@ function DataManager.NetReadControls()
 	end
 
 	return controlsData
-end
-
--- TODO: Move this somewhere else
---Loads the character on the player entity
----<br>REALM: SHARED
----@param ply Player
-function DataManager.LoadCharacterAppearance(ply)
-	if not ply:IsValid() then return end
-
-	if not ply.NSCOP then
-		NSCOP.PrintDebug("Player has no NSCOP table")
-		return
-	end
-
-	if not ply.NSCOP.PlayerData then
-		NSCOP.PrintDebug("Player has no PlayerData table")
-		return
-	end
-
-	local characterData = ply.NSCOP.PlayerData.CharacterData
-
-	-- ply:SetModel("OUR CUSTOM MODEL")
-	-- ply:SetSkin(characterData.SkinColor)
-	-- ply:SetBodygroup(NSCOP.BodyGroup.Hair, characterData.HairType)
-	-- ply:SetBodygroup(NSCOP.BodyGroup.Nose, characterData.NoseType)
-	-- ply:SetBodygroup(NSCOP.BodyGroup.Eye, characterData.EyeType)
-	-- ply:SetBodygroup(NSCOP.BodyGroup.Eyebrow, characterData.EyebrowType)
-	-- ply:SetBodygroup(NSCOP.BodyGroup.Mouth, characterData.MouthType)
-	-- ply:SetBodygroup(NSCOP.BodyGroup.Outfit, characterData.Outfit)
-	-- ply:SetPlayerColor(Vector(characterData.HairColor / 255, characterData.EyeColor / 255, 0))
-	ply:SetModelScale(characterData.Size, 0.000001) -- 0.000001 to avoid a bug with SetModelScale
-
-	NSCOP.PrintDebug("Loaded character appearance for", ply:GetName())
 end
 
 --#region ConCommands

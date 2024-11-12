@@ -125,34 +125,65 @@ local MPlayer = FindMetaTable("Player")
 ---@nodiscard
 ---@return Vector direction The normalized direction vector the player is moving in
 function MPlayer:NSCOP_GetMoveDirection(ignoreZAxis)
-	local eyeAngles = self:EyeAngles()
+    local eyeAngles = self:EyeAngles()
 
-	local forward = eyeAngles:Forward()
-	local right = eyeAngles:Right()
+    local forward = eyeAngles:Forward()
+    local right = eyeAngles:Right()
 
-	local moveDirection = vector_origin
+    local moveDirection = vector_origin
 
-	if self:KeyDown(IN_FORWARD) then
-		moveDirection = moveDirection + forward
+    if self:KeyDown(IN_FORWARD) then
+        moveDirection = moveDirection + forward
+    end
+
+    if self:KeyDown(IN_BACK) then
+        moveDirection = moveDirection - forward
+    end
+
+    if self:KeyDown(IN_MOVELEFT) then
+        moveDirection = moveDirection - right
+    end
+
+    if self:KeyDown(IN_MOVERIGHT) then
+        moveDirection = moveDirection + right
+    end
+
+    if ignoreZAxis then
+        moveDirection.z = 0
+    end
+
+    return moveDirection:GetNormalized()
+end
+
+--Loads the character data for the player entity
+---<br>REALM: SHARED
+function MPlayer:NSCOP_LoadAppearance()
+	if not self:IsValid() then return end
+
+	if not self.NSCOP then
+		NSCOP.PrintDebug("Player has no NSCOP table")
+		return
 	end
 
-	if self:KeyDown(IN_BACK) then
-		moveDirection = moveDirection - forward
+	if not self.NSCOP.PlayerData then
+		NSCOP.PrintDebug("Player has no PlayerData table")
+		return
 	end
 
-	if self:KeyDown(IN_MOVELEFT) then
-		moveDirection = moveDirection - right
-	end
+	local characterData = self.NSCOP.PlayerData.CharacterData
 
-	if self:KeyDown(IN_MOVERIGHT) then
-		moveDirection = moveDirection + right
-	end
+	-- self:SetModel("OUR CUSTOM MODEL")
+	-- self:SetSkin(characterData.SkinColor)
+	-- self:SetBodygroup(NSCOP.BodyGroup.Hair, characterData.HairType)
+	-- self:SetBodygroup(NSCOP.BodyGroup.Nose, characterData.NoseType)
+	-- self:SetBodygroup(NSCOP.BodyGroup.Eye, characterData.EyeType)
+	-- self:SetBodygroup(NSCOP.BodyGroup.Eyebrow, characterData.EyebrowType)
+	-- self:SetBodygroup(NSCOP.BodyGroup.Mouth, characterData.MouthType)
+	-- self:SetBodygroup(NSCOP.BodyGroup.Outfit, characterData.Outfit)
+	-- self:SetPlayerColor(Vector(characterData.HairColor / 255, characterData.EyeColor / 255, 0))
+	self:SetModelScale(characterData.Size, 0.000001) -- 0.000001 to avoid a bug with SetModelScale
 
-	if ignoreZAxis then
-		moveDirection.z = 0
-	end
-
-	return moveDirection:GetNormalized()
+	NSCOP.PrintDebug("Loaded character appearance for", self:GetName())
 end
 
 --#endregion

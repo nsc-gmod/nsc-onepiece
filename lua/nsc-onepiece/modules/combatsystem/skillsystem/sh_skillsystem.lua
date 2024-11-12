@@ -86,7 +86,7 @@ end
 function NSCOP.Skill:CreateInstance()
 	---@class NSCOP.SkillInstance : NSCOP.Skill
 	local instance = table.Copy(self)
-	setmetatable(instance, NSCOP.SkillInstance) 
+	setmetatable(instance, NSCOP.SkillInstance)
 
 	---@type NSCOP.Skill
 	instance.Skill = self

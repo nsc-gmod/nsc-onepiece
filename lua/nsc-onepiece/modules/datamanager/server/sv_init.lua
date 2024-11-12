@@ -65,6 +65,21 @@ function DataManager.NetWriteSkillsData(skillsData)
 	NSCOP.PrintDebug("Skills data size", net.BytesWritten())
 end
 
+function DataManager.InitData(ply)
+	NSCOP.SQL.UpdatePlayerId(ply)
+
+
+	ply.NSCOP = ply.NSCOP or {}
+	ply.NSCOP.PlayerData = DataManager.GetDefaultData()
+
+	net.Start(DataManager.NetworkMessage.SV_InitData)
+	net.Send(ply)
+
+	ply:NSCOP_LoadAppearance()
+
+	NSCOP.PrintDebug("Initialized data for player: ", ply)
+end
+
 ---Loads the data of the player and sends it to the client. This won't work if the client already has loaded data for performance reasons
 ---<br>REALM: SERVER
 ---@param ply Player
@@ -78,22 +93,10 @@ function DataManager.LoadData(ply)
 
 	local playerId = NSCOP.SQL.GetPlayerId(ply)
 
-	print(playerId, not playerId)
 	-- TODO: Export to its own function
 	-- Don't load data if the player already has them
 	if not playerId then
-		NSCOP.SQL.UpdatePlayerId(ply)
-
-		ply.NSCOP = {
-			PlayerData = data,
-		}
-
-		net.Start(DataManager.NetworkMessage.SV_InitData)
-		net.Send(ply)
-
-		DataManager.LoadCharacterAppearance(ply)
-
-		NSCOP.PrintDebug("Initialized data for player: ", ply)
+		DataManager.InitData(ply)
 		return
 	end
 
@@ -108,9 +111,8 @@ function DataManager.LoadData(ply)
 	data.Inventory = ply:NSCOP_GetPlayerDbTable("NSCOP_Inventory", data.Inventory)
 	data.Skills = ply:NSCOP_GetPlayerDbTable("NSCOP_Skills", data.Skills)
 
-	ply.NSCOP = {
-		PlayerData = data,
-	}
+	ply.NSCOP = {}
+	ply.NSCOP.PlayerData = data
 
 	net.Start(DataManager.NetworkMessage.SV_SyncData)
 	net.WriteUInt(data.CharacterId, 2)
@@ -127,7 +129,7 @@ function DataManager.LoadData(ply)
 	DataManager.NetWriteSkillsData(data.Skills)
 	net.Send(ply)
 
-	DataManager.LoadCharacterAppearance(ply)
+	ply:NSCOP_LoadAppearance()
 
 	NSCOP.PrintDebug("Loaded data for player: ", ply)
 end

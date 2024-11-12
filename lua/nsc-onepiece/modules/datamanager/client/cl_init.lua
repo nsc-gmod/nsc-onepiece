@@ -4,6 +4,18 @@ NSCOP.DataManager = NSCOP.DataManager or {}
 ---@class NSCOP.DataManager
 local DataManager = NSCOP.DataManager
 
+function DataManager.InitControls()
+	local ply = LocalPlayer()
+
+	ply.NSCOP = ply.NSCOP or {}
+	ply.NSCOP.Controls = DataManager.GetDefaultControls()
+
+	net.Start(DataManager.NetworkMessage.CL_InitControls)
+	net.SendToServer()
+
+	NSCOP.PrintDebug("Initialized controls for player: ", ply)
+end
+
 ---Loads the controls for the player and syncs them with the server
 ---<br>REALM: CLIENT
 function DataManager.LoadControls()
@@ -17,16 +29,8 @@ function DataManager.LoadControls()
 
 	local controlsExits = ply:GetPData("NSCOP_Controls", false)
 
-	-- TODO: Export to its own function
 	if not controlsExits then
-		ply.NSCOP = ply.NSCOP or {}
-		ply.NSCOP.Controls = defaultControls
-
-		net.Start(DataManager.NetworkMessage.CL_InitControls)
-		net.SendToServer()
-
-		NSCOP.PrintDebug("Initialized controls for player: ", ply)
-		return
+		DataManager.InitControls()
 	end
 
 	---@type NSCOP.Controls
@@ -186,12 +190,11 @@ net.Receive(DataManager.NetworkMessage.SV_InitData, function()
 	local defaultData = DataManager.GetDefaultData()
 	local defaultControls = DataManager.GetDefaultControls()
 
-	ply.NSCOP = {
-		PlayerData = defaultData,
-		Controls = defaultControls
-	}
+	ply.NSCOP = ply.NSCOP or {}
+	ply.NSCOP.PlayerData = defaultData
+	ply.NSCOP.Controls = defaultControls
 
-	DataManager.LoadCharacterAppearance(ply)
+	ply:NSCOP_LoadAppearance()
 
 	NSCOP.PrintDebug("Initialized and loaded default data for player: ", ply:GetName())
 end)
@@ -206,12 +209,10 @@ net.Receive(DataManager.NetworkMessage.SV_SyncData, function(len)
 
 	local ply = LocalPlayer()
 
-	ply.NSCOP = {
-		PlayerData = data,
-		Controls = ply.NSCOP.Controls or {}
-	}
+	ply.NSCOP = ply.NSCOP or {}
+	ply.NSCOP.PlayerData = data
 
-	DataManager.LoadCharacterAppearance(ply)
+	ply:NSCOP_LoadAppearance()
 end)
 
 --#region ConCommands

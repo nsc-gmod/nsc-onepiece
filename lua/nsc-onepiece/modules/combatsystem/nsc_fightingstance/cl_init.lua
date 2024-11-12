@@ -23,6 +23,11 @@ function NSCOP.FightingStance:DrawSkills()
 	end
 end
 
+---Draws a skill slot on the HUD
+---<br>REALM: CLIENT
+---@param x number
+---@param y number
+---@param active boolean If the skill is active
 function NSCOP.FightingStance:DrawSkill(x, y, active)
 	local finalMat = skillRect
 	local skillSize = screenScaleW(64)
