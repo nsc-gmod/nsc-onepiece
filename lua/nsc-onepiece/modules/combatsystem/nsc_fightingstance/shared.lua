@@ -154,6 +154,10 @@ function NSCOP.FightingStance:Dodge(aerial)
 	owner:SetLocalVelocity(owner:GetVelocity() + moveDirection * finalForce)
 	NSCOP.Print("Player dodged", owner)
 
+	if SERVER then
+		print("IFRAMES", owner:NSCOP_GetIFrames(), owner:NSCOP_HasIFrames())
+		owner:NSCOP_SetIFrames(100)
+	end
 	self:SetNextDodge(CurTime() + self.DodgeCD)
 end
 
