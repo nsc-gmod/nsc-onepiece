@@ -13,6 +13,9 @@ NSCOP.SQLTable = {
 	ObjectTable = "nscop_object"
 }
 
+-- TODO: Start using enum table keys
+-- TODO: Add more types
+
 ---Prints the query to the console, with an optional error message
 ---<br>REALM: SERVER
 ---@param query string The query to print
@@ -46,10 +49,24 @@ end
 
 ---Creates the database if it doesn't exist
 ---<br>REALM: SERVER
-function SQL.CreateDB()
+---@param shouldDropFirst? boolean Whether to drop the database first
+function SQL.CreateDB(shouldDropFirst)
 	if sql.TableExists(NSCOP.SQLTable.PlayerTable) then
-		NSCOP.PrintDebug("DATABASE ALREADY EXISTS")
-		return
+		-- Drop all tables if we want to, so that we don't have to manually delete the database and forget stuff
+		if NSCOP.DebugMode() and shouldDropFirst then
+			sql.Query("DROP TABLE IF EXISTS nscop_player")
+			sql.Query("DROP TABLE IF EXISTS nscop_character")
+			sql.Query("DROP TABLE IF EXISTS nscop_character_inventory")
+			sql.Query("DROP TABLE IF EXISTS nscop_character_skill")
+			sql.Query("DROP TABLE IF EXISTS nscop_object")
+
+			NSCOP.PrintDebug("DATABASE DROPPED")
+		end
+
+		if not shouldDropFirst then
+			NSCOP.PrintDebug("DATABASE ALREADY EXISTS")
+			return;
+		end
 	end
 
 	sql.Begin()
@@ -97,7 +114,7 @@ function SQL.CreateDB()
 			"object_id"	INTEGER NOT NULL,
 			"order"	INTEGER NOT NULL,
 			PRIMARY KEY("id" AUTOINCREMENT),
-			FOREIGN KEY("character_id") REFERENCES "nscop_character"("id"),
+			FOREIGN KEY("character_id") REFERENCES "nscop_character"("id") ON DELETE CASCADE
 		)
 	]])
 

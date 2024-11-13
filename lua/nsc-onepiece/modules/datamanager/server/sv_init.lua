@@ -53,8 +53,8 @@ function DataManager.NetWriteCharacterData(characterData)
 	net.WriteUInt(characterData.SkillPoints, 8)
 	net.WriteUInt(characterData.Money, 32)
 	DataManager.NetWriteInventoryData(characterData.Inventory)
-    DataManager.NetWriteSkillsData(characterData.Skills)
-	
+	DataManager.NetWriteSkillsData(characterData.Skills)
+
 	NSCOP.PrintDebug("Character data size", net.BytesWritten())
 end
 
@@ -88,6 +88,8 @@ function DataManager.InitData(ply)
 	ply.NSCOP.PlayerData = DataManager.GetDefaultData()
 	ply.NSCOP.PlayerData.PlayerId = playerId
 
+	DataManager.SaveData(ply)
+
 	net.Start(DataManager.NetworkMessage.SV_InitData)
 	net.Send(ply)
 
@@ -107,8 +109,8 @@ function DataManager.LoadData(ply)
 		return
 	end
 
-    local playerId = NSCOP.SQL.GetPlayerId(ply)
-	
+	local playerId = NSCOP.SQL.GetPlayerId(ply)
+
 	-- Don't load data if the player already has them
 	if not playerId then
 		DataManager.InitData(ply)
