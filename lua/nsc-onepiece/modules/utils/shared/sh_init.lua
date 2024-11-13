@@ -13,7 +13,7 @@ local Utils = NSCOP.Utils
 ---@param type NSCOP.NetworkVarType Type of the network var
 ---@param name string A unique name for the network var
 function Utils.NetworkVar(entity, type, name)
-	-- We need to disable the diagnostic, because there is no other way to get around this, this should be fixed in the gmod type definitions
+	-- We need to disable the diagnostic, because there is no other way to get around this, this should be fixed in the gmod's type definitions
 	---@diagnostic disable-next-line: missing-parameter, param-type-mismatch
 	entity:NetworkVar(type, name)
 end
@@ -45,6 +45,7 @@ end
 ---@overload fun(eventName: "ClientSignOnStateChanged", identifier: string, func: fun(userId: number, oldState: number, newState: number))
 ---@overload fun(eventName: "NSCOP.PlayerLoaded", identifier: string, func: fun(ply: Player))
 ---@overload fun(eventName: "NSCOP.ButtonStateChanged", identifier: string, func: fun(buttonData: NSCOP.ButtonData, lastState: NSCOP.ButtonState, newState: NSCOP.ButtonState))
+---@overload fun(eventName: "NSCOP.ControlsUpdated", identifier: string, func: fun(ply: Player, key: NSCOP.ButtonType, oldValue: NSCOP.ButtonValue, newValue: NSCOP.ButtonValue))
 function Utils.AddHook(eventName, identifier, func)
 	hook.Add(eventName, identifier, func)
 end
@@ -72,7 +73,6 @@ function Utils.GetConfigValue(key, defaultValue)
 	return NSCOP.Config[key] or defaultValue
 end
 
---TODO: Refactor this in the future
 ---Returns players for the console command autocomplete
 ---<br>REALM: SHARED
 ---@param commandName string The name of the command
@@ -82,9 +82,10 @@ end
 ---@return string[] playersAutocomplete
 function Utils.GetPlayersAutocomplete(commandName, cmd, argStr, args)
 	local playersAutocomplete = {}
+	local lowerArgStr = argStr:Trim():lower()
 
 	for _, currentPly in player.Iterator() do
-		if not currentPly:GetName():lower():StartsWith(argStr:Trim():lower()) then continue end
+		if not currentPly:GetName():lower():StartsWith(lowerArgStr) then continue end
 
 		---@cast currentPly Player
 		table.insert(playersAutocomplete, commandName .. " " .. currentPly:GetName())
@@ -125,34 +126,34 @@ local MPlayer = FindMetaTable("Player")
 ---@nodiscard
 ---@return Vector direction The normalized direction vector the player is moving in
 function MPlayer:NSCOP_GetMoveDirection(ignoreZAxis)
-    local eyeAngles = self:EyeAngles()
+	local eyeAngles = self:EyeAngles()
 
-    local forward = eyeAngles:Forward()
-    local right = eyeAngles:Right()
+	local forward = eyeAngles:Forward()
+	local right = eyeAngles:Right()
 
-    local moveDirection = vector_origin
+	local moveDirection = vector_origin
 
-    if self:KeyDown(IN_FORWARD) then
-        moveDirection = moveDirection + forward
-    end
+	if self:KeyDown(IN_FORWARD) then
+		moveDirection = moveDirection + forward
+	end
 
-    if self:KeyDown(IN_BACK) then
-        moveDirection = moveDirection - forward
-    end
+	if self:KeyDown(IN_BACK) then
+		moveDirection = moveDirection - forward
+	end
 
-    if self:KeyDown(IN_MOVELEFT) then
-        moveDirection = moveDirection - right
-    end
+	if self:KeyDown(IN_MOVELEFT) then
+		moveDirection = moveDirection - right
+	end
 
-    if self:KeyDown(IN_MOVERIGHT) then
-        moveDirection = moveDirection + right
-    end
+	if self:KeyDown(IN_MOVERIGHT) then
+		moveDirection = moveDirection + right
+	end
 
-    if ignoreZAxis then
-        moveDirection.z = 0
-    end
+	if ignoreZAxis then
+		moveDirection.z = 0
+	end
 
-    return moveDirection:GetNormalized()
+	return moveDirection:GetNormalized()
 end
 
 --Loads the character data for the player entity

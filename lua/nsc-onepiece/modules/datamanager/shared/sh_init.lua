@@ -84,6 +84,7 @@ NSCOP.BodyGroup = {
 ---@alias NSCOP.Controls {[NSCOP.ButtonType]:  NSCOP.ButtonData}
 
 ---@class NSCOP.CharacterData
+---@field Name string
 ---@field HairType integer
 ---@field NoseType integer
 ---@field EyeType integer
@@ -94,12 +95,6 @@ NSCOP.BodyGroup = {
 ---@field EyeColor integer
 ---@field Size number
 ---@field Outfit integer
-
----@class NSCOP.PlayerData
----@field PlayerId integer
----@field CharacterId integer
----@field CharacterName string
----@field CharacterData NSCOP.CharacterData
 ---@field Race NSCOP.Race
 ---@field Profession NSCOP.Profession
 ---@field Class NSCOP.Class
@@ -109,6 +104,11 @@ NSCOP.BodyGroup = {
 ---@field Money integer
 ---@field Inventory integer[]
 ---@field Skills integer[]
+
+---@class NSCOP.PlayerData
+---@field PlayerId integer
+---@field CharacterId integer
+---@field CharacterData NSCOP.CharacterData
 
 ---@class Player.NSCOP
 ---@field PlayerData? NSCOP.PlayerData
@@ -142,8 +142,8 @@ function DataManager.GetDefaultData()
 	local playerData = {
 		PlayerId = 0,
 		CharacterId = 0,
-		CharacterName = "",
 		CharacterData = {
+			Name = "",
 			HairType = 0,
 			NoseType = 0,
 			EyeType = 0,
@@ -153,27 +153,28 @@ function DataManager.GetDefaultData()
 			HairColor = 0,
 			EyeColor = 0,
 			Size = 1,
-			Outfit = 0
+			Outfit = 0,
+			Race = NSCOP.Race.None,
+			Profession = NSCOP.Profession.None,
+			Class = NSCOP.Class.None,
+			Level = 1,
+			Experience = 0,
+			SkillPoints = 0,
+			Money = 0,
+			Inventory = {},
+			Skills = {}
 		},
-		Race = NSCOP.Race.None,
-		Profession = NSCOP.Profession.None,
-		Class = NSCOP.Class.None,
-		Level = 1,
-		Experience = 0,
-		SkillPoints = 0,
-		Money = 0,
-		Inventory = {},
-		Skills = {}
 	}
 
-	playerData.CharacterName =
+	-- Dummy data
+	playerData.CharacterData.Name =
 	"This is a supper super long dummy name which should never happen, but Lets test how heavy this can get "
 	for i = 1, 200 do
-		table.insert(playerData.Inventory, i)
+		table.insert(playerData.CharacterData.Inventory, i)
 	end
 
 	for i = 1, 200 do
-		table.insert(playerData.Skills, i)
+		table.insert(playerData.CharacterData.Skills, i)
 	end
 
 	return playerData

@@ -85,6 +85,7 @@ function DataManager.UpdateControlsKey(key, newValue)
 		return
 	end
 
+	local oldValue = ply.NSCOP.Controls[key].Button
 	ply.NSCOP.Controls[key].Button = newValue
 
 	net.Start(DataManager.NetworkMessage.CL_UpdateControlsKey)
@@ -92,6 +93,8 @@ function DataManager.UpdateControlsKey(key, newValue)
 	---@diagnostic disable-next-line: param-type-mismatch
 	net.WriteUInt(newValue, 8)
 	net.SendToServer()
+
+	NSCOP.Utils.RunHook("NSCOP.ControlsUpdated", ply, key, oldValue, newValue)
 end
 
 ---Reads the character data from the net message and returns it as characterData table
@@ -101,6 +104,7 @@ end
 function DataManager.NetReadCharacterData()
 	---@type NSCOP.CharacterData
 	local characterData = {
+		Name = net.ReadString(),
 		HairType = net.ReadUInt(4),
 		NoseType = net.ReadUInt(4),
 		EyeType = net.ReadUInt(4),
@@ -110,7 +114,16 @@ function DataManager.NetReadCharacterData()
 		HairColor = net.ReadUInt(4),
 		EyeColor = net.ReadUInt(4),
 		Size = net.ReadFloat(),
-		Outfit = net.ReadUInt(5)
+		Outfit = net.ReadUInt(5),
+		Race = net.ReadUInt(2),
+		Profession = net.ReadUInt(2),
+		Class = net.ReadUInt(3),
+		Level = net.ReadUInt(10),
+		Experience = net.ReadFloat(),
+		SkillPoints = net.ReadUInt(8),
+		Money = net.ReadUInt(32),
+		Inventory = DataManager.NetReadInventoryData(),
+		Skills = DataManager.NetReadSkillsData(),
 	}
 
 	return characterData
@@ -157,15 +170,6 @@ function DataManager.NetReadPlayerData()
 		CharacterId = net.ReadUInt(2),
 		CharacterName = net.ReadString(),
 		CharacterData = DataManager.NetReadCharacterData(),
-		Race = net.ReadUInt(2),
-		Profession = net.ReadUInt(2),
-		Class = net.ReadUInt(3),
-		Level = net.ReadUInt(10),
-		Experience = net.ReadFloat(),
-		SkillPoints = net.ReadUInt(8),
-		Money = net.ReadUInt(32),
-		Inventory = DataManager.NetReadInventoryData(),
-		Skills = DataManager.NetReadSkillsData(),
 	}
 
 	return playerData
