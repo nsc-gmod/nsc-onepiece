@@ -183,7 +183,6 @@ function SQL.GetCharacterIds(playerId)
 		table.insert(characterIds, tonumber(row.id))
 	end
 
-	PrintTable(characterIds)
 	return characterIds
 end
 
@@ -316,7 +315,6 @@ function SQL.UpdatePlayerId(ply)
 	end
 
 	local newPlayerId = tonumber(sql.Query("SELECT last_insert_rowid() AS last_id")[1].last_id)
-	print(newPlayerId)
 
 	return newPlayerId
 end
