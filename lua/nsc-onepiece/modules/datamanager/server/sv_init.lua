@@ -30,10 +30,11 @@ util.AddNetworkString(DataManager.NetworkMessage.SV_SyncData)
 ---| "NSCOP_Skills"
 ---| "NSCOP_Controls"
 
----Writes the data of the player to the current net message
+---Writes the data of the player's character to the current net message
 ---<br>REALM: SERVER
 ---@param characterData NSCOP.CharacterData
 function DataManager.NetWriteCharacterData(characterData)
+	net.WriteString(characterData.Name)
 	net.WriteUInt(characterData.HairType, 4)
 	net.WriteUInt(characterData.NoseType, 4)
 	net.WriteUInt(characterData.EyeType, 4)
@@ -44,6 +45,18 @@ function DataManager.NetWriteCharacterData(characterData)
 	net.WriteUInt(characterData.EyeColor, 4)
 	net.WriteFloat(characterData.Size)
 	net.WriteUInt(characterData.Outfit, 5)
+	net.WriteUInt(characterData.Race, 2)
+	net.WriteUInt(characterData.Profession, 2)
+	net.WriteUInt(characterData.Class, 3)
+	net.WriteUInt(characterData.Level, 10)
+	net.WriteFloat(characterData.Experience)
+	net.WriteUInt(characterData.SkillPoints, 8)
+	net.WriteUInt(characterData.Money, 32)
+	DataManager.NetWriteInventoryData(characterData.Inventory)
+	DataManager.NetWriteSkillsData(characterData.Skills)
+
+	PrintTable(characterData.Inventory)
+	PrintTable(characterData.Skills)
 	NSCOP.PrintDebug("Character data size", net.BytesWritten())
 end
 
@@ -66,18 +79,23 @@ function DataManager.NetWriteSkillsData(skillsData)
 end
 
 function DataManager.InitData(ply)
-	NSCOP.SQL.UpdatePlayerId(ply)
+	local playerId = NSCOP.SQL.UpdatePlayerId(ply)
 
+	if not playerId then
+		NSCOP.PrintDebug("Failed to initialize data for player: ", ply)
+		return
+	end
 
 	ply.NSCOP = ply.NSCOP or {}
 	ply.NSCOP.PlayerData = DataManager.GetDefaultData()
+	ply.NSCOP.PlayerData.PlayerId = playerId
 
 	net.Start(DataManager.NetworkMessage.SV_InitData)
 	net.Send(ply)
 
-	ply:NSCOP_LoadAppearance()
-
 	NSCOP.PrintDebug("Initialized data for player: ", ply)
+
+	ply:NSCOP_LoadAppearance()
 end
 
 ---Loads the data of the player and sends it to the client. This won't work if the client already has loaded data for performance reasons
@@ -91,42 +109,48 @@ function DataManager.LoadData(ply)
 		return
 	end
 
-	local playerId = NSCOP.SQL.GetPlayerId(ply)
-
-	-- TODO: Export to its own function
+    local playerId = NSCOP.SQL.GetPlayerId(ply)
+	
 	-- Don't load data if the player already has them
 	if not playerId then
 		DataManager.InitData(ply)
 		return
 	end
 
+	local characterId = NSCOP.SQL.GetCharacterIds(playerId)[1]
+	local characterData = NSCOP.SQL.GetCharacterData(characterId)
+
+	if not characterData then
+		NSCOP.PrintDebug("Failed to load data for player: ", ply)
+		return
+	end
+
+	local inventoryData = NSCOP.SQL.GetCharacterInventoryData(characterId)
+
+	if not inventoryData then
+		NSCOP.PrintDebug("Failed to load inventory data for player: ", ply)
+		return
+	end
+
+	local skillsData = NSCOP.SQL.GetCharacterSkillsData(characterId)
+
+	if not skillsData then
+		NSCOP.PrintDebug("Failed to load skills data for player: ", ply)
+		return
+	end
+
 	data.PlayerId = playerId
-	data.CharacterId = ply:NSCOP_GetPlayerDbNumber("NSCOP_CharacterId", data.CharacterId)
-	data.CharacterData = ply:NSCOP_GetPlayerDbTable("NSCOP_CharacterData", data.CharacterData)
-	data.Profession = ply:NSCOP_GetPlayerDbNumber("NSCOP_Profession", data.Profession)
-	data.Level = ply:NSCOP_GetPlayerDbNumber("NSCOP_Level", data.Level)
-	data.Experience = ply:NSCOP_GetPlayerDbNumber("NSCOP_Experience", data.Experience)
-	data.SkillPoints = ply:NSCOP_GetPlayerDbNumber("NSCOP_SkillPoints", data.SkillPoints)
-	data.Money = ply:NSCOP_GetPlayerDbNumber("NSCOP_Money", data.Money)
-	data.Inventory = ply:NSCOP_GetPlayerDbTable("NSCOP_Inventory", data.Inventory)
-	data.Skills = ply:NSCOP_GetPlayerDbTable("NSCOP_Skills", data.Skills)
+	data.CharacterId = characterId
+	data.CharacterData = characterData
 
 	ply.NSCOP = {}
 	ply.NSCOP.PlayerData = data
+	ply.NSCOP.PlayerData.CharacterData.Inventory = inventoryData
+	ply.NSCOP.PlayerData.CharacterData.Skills = skillsData
 
 	net.Start(DataManager.NetworkMessage.SV_SyncData)
 	net.WriteUInt(data.CharacterId, 2)
-	net.WriteString(data.CharacterName)
 	DataManager.NetWriteCharacterData(data.CharacterData)
-	net.WriteUInt(data.Race, 2)
-	net.WriteUInt(data.Profession, 2)
-	net.WriteUInt(data.Class, 3)
-	net.WriteUInt(data.Level, 10)
-	net.WriteFloat(data.Experience)
-	net.WriteUInt(data.SkillPoints, 8)
-	net.WriteUInt(data.Money, 32)
-	DataManager.NetWriteInventoryData(data.Inventory)
-	DataManager.NetWriteSkillsData(data.Skills)
 	net.Send(ply)
 
 	ply:NSCOP_LoadAppearance()
@@ -138,27 +162,19 @@ end
 ---<br>REALM: SERVER
 ---@param ply Player
 function DataManager.SaveData(ply)
-	if not ply.NSCOP then
-		NSCOP.PrintDebug("Player does not have the NSCOP table: ", ply)
-		return
+	local newCharacterId = NSCOP.SQL.UpdateCharacter(ply)
+
+	-- Updates the character id if a new character was created and saves inventory and skills
+	if newCharacterId then
+		ply.NSCOP.PlayerData.CharacterId = newCharacterId
 	end
 
-	local data = ply.NSCOP.PlayerData
+	if ply.NSCOP.PlayerData.CharacterId then
+		NSCOP.SQL.UpdateInventory(ply)
+		NSCOP.SQL.UpdateSkills(ply)
 
-	if not data then
-		NSCOP.PrintDebug("Player does not have data to save: ", ply)
-		return
+		NSCOP.PrintDebug("Updated inventory and skills for player: ", ply)
 	end
-
-	ply:SetPData("NSCOP_CharacterId", data.CharacterId)
-	ply:SetPData("NSCOP_CharacterData", util.TableToJSON(data.CharacterData))
-	ply:SetPData("NSCOP_Profession", data.Profession)
-	ply:SetPData("NSCOP_Level", data.Level)
-	ply:SetPData("NSCOP_Experience", data.Experience)
-	ply:SetPData("NSCOP_SkillPoints", data.SkillPoints)
-	ply:SetPData("NSCOP_Money", data.Money)
-	ply:SetPData("NSCOP_Inventory", util.TableToJSON(data.Inventory))
-	ply:SetPData("NSCOP_Skills", util.TableToJSON(data.Skills))
 
 	NSCOP.PrintDebug("Saved data for player: ", ply)
 end
@@ -249,8 +265,10 @@ net.Receive(DataManager.NetworkMessage.CL_UpdateControlsKey, function(len, ply)
 	---@type NSCOP.ButtonValue
 	local newValue = net.ReadUInt(8)
 
-	local oldValue = ply.NSCOP.Controls[key]
+	local oldValue = ply.NSCOP.Controls[key].Button
 	ply.NSCOP.Controls[key].Button = newValue
+
+	NSCOP.Utils.RunHook("NSCOP.ControlsUpdated", ply, key, oldValue, newValue)
 
 	NSCOP.PrintDebug("Updated controls key for player: ", ply)
 	NSCOP.PrintDebug("Key: ", key, "Old value: ", oldValue, "New value: ", newValue)

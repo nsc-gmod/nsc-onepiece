@@ -135,8 +135,8 @@ end
 ---@return integer[]
 function DataManager.NetReadInventoryData()
 	local inventoryLength = net.ReadUInt(16)
-	local inventoryData = {}
-
+    local inventoryData = {}
+	
 	for i = 1, inventoryLength do
 		inventoryData[i] = net.ReadUInt(16)
 	end
@@ -168,7 +168,6 @@ function DataManager.NetReadPlayerData()
 	local playerData = {
 		PlayerId = -1,
 		CharacterId = net.ReadUInt(2),
-		CharacterName = net.ReadString(),
 		CharacterData = DataManager.NetReadCharacterData(),
 	}
 
@@ -198,9 +197,9 @@ net.Receive(DataManager.NetworkMessage.SV_InitData, function()
 	ply.NSCOP.PlayerData = defaultData
 	ply.NSCOP.Controls = defaultControls
 
-	ply:NSCOP_LoadAppearance()
-
 	NSCOP.PrintDebug("Initialized and loaded default data for player: ", ply:GetName())
+
+	ply:NSCOP_LoadAppearance()
 end)
 
 net.Receive(DataManager.NetworkMessage.SV_SyncData, function(len)

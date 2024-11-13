@@ -11,9 +11,18 @@ NSCOP.DamageType = {
 }
 
 ---Initializes the player's values
+---<br>REALM: Server
 function MPlayer:NSCOP_InitValues()
-	self.NSCOP = self.NSCOP or {}
+	if not self:IsValid() then return end
+
+	if not self.NSCOP then
+		NSCOP.PrintDebug("Player has no NSCOP data")
+		return
+	end
+
 	self.NSCOP.IFramesTime = 0
+
+	NSCOP.PrintDebug("Initialized server combat values for player: ", self)
 end
 
 ---Resets the player's values to the default ones
@@ -57,6 +66,8 @@ end
 
 NSCOP.Utils.AddHook("PlayerSpawn", "NSCOP.CombatSystem.PlayerSpawn", function(ply)
 	ply:NSCOP_ResetValues()
+
+	NSCOP.PrintDebug("Player spawned: ", ply)
 end)
 
 NSCOP.Utils.AddHook("EntityTakeDamage", "NSCOP.CombatSystem.EntityTakeDamage", function(target, dmgInfo)

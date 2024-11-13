@@ -169,11 +169,11 @@ function DataManager.GetDefaultData()
 	-- Dummy data
 	playerData.CharacterData.Name =
 	"This is a supper super long dummy name which should never happen, but Lets test how heavy this can get "
-	for i = 1, 200 do
+	for i = 1, 2000 do
 		table.insert(playerData.CharacterData.Inventory, i)
 	end
 
-	for i = 1, 200 do
+	for i = 1, 2000 do
 		table.insert(playerData.CharacterData.Skills, i)
 	end
 
