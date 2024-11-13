@@ -69,6 +69,19 @@ function NSCOP.FightingStance:Initialize()
 	self:ResetCooldowns()
 	self:ResetVars()
 	self:SetCombatStance(true)
+
+	if SERVER then
+		timer.Simple(0, function()
+			if not self:IsValid() then return end
+
+			local owner = self:GetOwner()
+			if not owner:IsValid() then return end
+			if not owner:IsPlayer() then return end
+			---@cast owner Player
+
+			owner:NSCOP_InitValues()
+		end)
+	end
 end
 
 function NSCOP.FightingStance:Deploy()
