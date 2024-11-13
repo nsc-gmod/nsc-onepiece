@@ -9,6 +9,7 @@ include("shared/sh_init.lua")
 NSCOP.IncludeModule(NSCOP.Modules.Utils)
 NSCOP.IncludeModule(NSCOP.Modules.ConfigManager)
 NSCOP.IncludeModule(NSCOP.Modules.DataManager)
+NSCOP.IncludeModule(NSCOP.Modules.InventorySystem)
 NSCOP.IncludeModule(NSCOP.Modules.CombatSystem)
 
 NSCOP.PrintFileLoaded()

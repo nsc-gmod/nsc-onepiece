@@ -12,7 +12,8 @@ NSCOP.Modules = {
 	Utils = "utils",
 	ConfigManager = "configmanager",
 	DataManager = "datamanager",
-	CombatSystem = "combatsystem",
+    CombatSystem = "combatsystem",
+	InventorySystem = "inventorysystem",
 }
 
 ---Prints a message to the console with a [NSCOP] prefix
