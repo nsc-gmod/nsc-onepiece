@@ -1,8 +1,9 @@
 --#region Modules
 
 -- Configure if you want to disable certain modules. True - Enabled, False - Disabled
-NSCOP.Config.Main.ModulesEnabled[NSCOP.Modules.CombatSystem] = true -- The Combat System
-NSCOP.Config.Main.ModulesEnabled[NSCOP.Modules.DataManager] = true  -- The DataManager System
+NSCOP.Config.Main.ModulesEnabled[NSCOP.Modules.CombatSystem] = true    -- The Combat System
+NSCOP.Config.Main.ModulesEnabled[NSCOP.Modules.DataManager] = true     -- The DataManager System
+NSCOP.Config.Main.ModulesEnabled[NSCOP.Modules.InventorySystem] = true -- The InventorySystem System
 
 --#endregion
 
