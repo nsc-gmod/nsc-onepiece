@@ -44,7 +44,6 @@ function DataManager.LoadControls()
 	net.SendToServer()
 
 	NSCOP.PrintDebug("Loaded controls for player: ", ply)
-	PrintTable(data)
 end
 
 function DataManager.SaveControls()

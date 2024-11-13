@@ -53,10 +53,8 @@ function DataManager.NetWriteCharacterData(characterData)
 	net.WriteUInt(characterData.SkillPoints, 8)
 	net.WriteUInt(characterData.Money, 32)
 	DataManager.NetWriteInventoryData(characterData.Inventory)
-	DataManager.NetWriteSkillsData(characterData.Skills)
-
-	PrintTable(characterData.Inventory)
-	PrintTable(characterData.Skills)
+    DataManager.NetWriteSkillsData(characterData.Skills)
+	
 	NSCOP.PrintDebug("Character data size", net.BytesWritten())
 end
 
