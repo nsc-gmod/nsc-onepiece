@@ -191,7 +191,7 @@ function DataManager.GetDefaultControls()
 		[NSCOP.ButtonType.SelectSkillFour] = { Button = KEY_4, State = NSCOP.KeyState.Up, StateTime = 0 },
 		[NSCOP.ButtonType.SelectSkillFive] = { Button = KEY_5, State = NSCOP.KeyState.Up, StateTime = 0 },
 		[NSCOP.ButtonType.SelectSkillSix] = { Button = KEY_6, State = NSCOP.KeyState.Up, StateTime = 0 },
-		[NSCOP.ButtonType.SkillDodge] = { Button = KEY_LCONTROL, State = NSCOP.KeyState.Up, StateTime = 0 },
+		[NSCOP.ButtonType.SkillDodge] = { Button = KEY_LALT, State = NSCOP.KeyState.Up, StateTime = 0 },
 		[NSCOP.ButtonType.SkillUse] = { Button = MOUSE_RIGHT, State = NSCOP.KeyState.Up, StateTime = 0 },
 	}
 

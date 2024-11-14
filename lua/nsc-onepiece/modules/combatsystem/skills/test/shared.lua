@@ -6,7 +6,7 @@ local Test = NSCOP.Skill.RegisterSkill({
 
 if not Test then return end
 
-function Test:DoCrazyShit()
+function Test:UseSkill()
 	local weapon = self.Weapon
 
 	local owner = weapon:GetOwner()

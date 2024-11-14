@@ -1,5 +1,45 @@
 ---@class NSCOP.FightingStance: SWEP
 
+local defaultFov = 80
+local defaultCamOffset = -0
+
+local camFov = defaultFov
+local camOffset = defaultCamOffset
+
+local vectorOrigin = vector_origin
+local angleZero = angle_zero
+
+local viewPos   = vectorOrigin
+local viewAngle = angleZero
+
+NSCOP.Utils.AddHook( "CalcView", "NSCOP.FightingStance.ThirdPerson", function( ply, pos, angles, fov, znear, zfar )
+    if ply:NSCOP_IsUsingCombatSWEP() then
+        if camFov < 10 then return end
+
+        local frameTime = FrameTime()
+
+        camFov = defaultFov
+        
+        local tr = util.TraceLine( {
+            start = pos,
+            endpos = pos - ( angles:Forward() * camFov + angles:Right() * camOffset ),
+            collisiongroup = COLLISION_GROUP_DEBRIS,
+        } )
+                
+        viewPos = LerpVector( 25 * frameTime, viewPos, tr.HitPos )
+        viewAngle = LerpAngle( 25 * frameTime, viewAngle, angles )
+        
+        local view = {
+            origin = viewPos,
+            angles = viewAngle,
+            fov = fov,
+            drawviewer = true
+        }
+        
+        return view
+    end       
+end)
+
 local skillRect = Material("nsc-onepiece/hud/skillRect.vmt")
 local skillRectActive = Material("nsc-onepiece/hud/skillRect_Active.vmt")
 

@@ -20,7 +20,6 @@ NSCOP.SkillInstance.Instances = NSCOP.SkillInstance.Instances or {}
 NSCOP.Skill.SkillIDs = {
 	BasicAttack = 1,
 	MoonStepDodge = 2,
-	MoonStepAerial = 3,
 }
 
 ---Creates a Skill class object using the data
@@ -86,7 +85,7 @@ end
 function NSCOP.Skill:CreateInstance()
 	---@class NSCOP.SkillInstance : NSCOP.Skill
 	local instance = table.Copy(self)
-	setmetatable(instance, NSCOP.SkillInstance) 
+	setmetatable(instance, NSCOP.SkillInstance)
 
 	---@type NSCOP.Skill
 	instance.Skill = self
@@ -114,4 +113,15 @@ end
 ---@param weapon NSCOP.FightingStance
 function NSCOP.SkillInstance:AssignWeapon(weapon)
 	self.Weapon = weapon
+end
+
+function NSCOP.SkillInstance:Remove()
+	NSCOP.SkillInstance.AllInstances()[ self.InstanceId ] = nil
+	setmetatable( self, nil )
+
+	self = nil
+end
+
+function NSCOP.SkillInstance:UseSkill()
+	--
 end

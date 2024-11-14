@@ -14,5 +14,6 @@ NSCOP.IncludeShared("nsc_fightingstance/shared.lua")
 
 -- The skills
 NSCOP.LoadSkill("skills/test")
+NSCOP.LoadSkill("skills/moonstepdodge")
 
 NSCOP.PrintFileLoaded()

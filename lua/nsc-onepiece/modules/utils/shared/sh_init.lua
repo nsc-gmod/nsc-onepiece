@@ -42,7 +42,9 @@ end
 ---@overload fun(eventName: "HUDShouldDraw", identifier: string, func: fun(element: NSCOP.HUDBaseElement): boolean)
 ---@overload fun(eventName: "OnScreenSizeChanged", identifier: string, func: fun(oldWidth: number, oldHeight: number, newWidth: number, newHeight: number))
 ---@overload fun(eventName: "Tick", identifier: string, func: fun())
+---@overload fun(eventName: "Think", identifier: string, func: fun())
 ---@overload fun(eventName: "ClientSignOnStateChanged", identifier: string, func: fun(userId: number, oldState: number, newState: number))
+---@overload fun(eventName: "CalcView", identifier: string, func: fun(ply: Player, pos: Vector, angles: Angle, fov: number), return: table)
 ---@overload fun(eventName: "NSCOP.PlayerLoaded", identifier: string, func: fun(ply: Player))
 ---@overload fun(eventName: "NSCOP.ButtonStateChanged", identifier: string, func: fun(buttonData: NSCOP.ButtonData, lastState: NSCOP.ButtonState, newState: NSCOP.ButtonState))
 function Utils.AddHook(eventName, identifier, func)
@@ -155,6 +157,14 @@ function MPlayer:NSCOP_GetMoveDirection(ignoreZAxis)
 	return moveDirection:GetNormalized()
 end
 
+---Returns whether the player is using a combat swep
+---<br>REALM: SHARED
+---@nodiscard
+---@return boolean isUsingCombatSWEP
+function MPlayer:NSCOP_IsUsingCombatSWEP() 
+	return IsValid( self:GetActiveWeapon() ) and self:GetActiveWeapon():NSCOP_IsCombatSWEP() 
+end 
+
 --#endregion
 
 --#region MWeapon extensions
@@ -166,7 +176,24 @@ local MWeapon = FindMetaTable("Weapon")
 ---@nodiscard
 ---@return boolean isCombatSWEP
 function MWeapon:NSCOP_IsCombatSWEP()
-	return self:GetClass() == "nsc_fightingstance"
+	return self.Base or self:GetClass() == "nsc_fightingstance"
+end
+
+--#endregion
+
+--#region MVector extensions
+---@class Vector
+local MVector = FindMetaTable("Vector")
+
+---Same as math.Approach, but for vectors
+---<br>REALM: SHARED
+---@nodiscard
+---@param currentPos Vector The vector we're currently at.
+---@param targetPos Vector The target vector. This function will never overshoot this value.
+---@param change number The amount that the current value is allowed to change by to approach the target. (It makes no difference whether this is positive or negative.)
+---@return Vector changedVector
+function Utils.NSCOP_ApproachVector(currentPos, targetPos, change)
+	return Vector(math.Approach(currentPos.x, targetPos.x, change), math.Approach(currentPos.y, targetPos.y, change), math.Approach( currentPos.z, targetPos.z, change))
 end
 
 --#endregion
