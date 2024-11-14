@@ -4,6 +4,18 @@ NSCOP.DataManager = NSCOP.DataManager or {}
 ---@class NSCOP.DataManager
 local DataManager = NSCOP.DataManager
 
+function DataManager.InitControls()
+	local ply = LocalPlayer()
+
+	ply.NSCOP = ply.NSCOP or {}
+	ply.NSCOP.Controls = DataManager.GetDefaultControls()
+
+	net.Start(DataManager.NetworkMessage.CL_InitControls)
+	net.SendToServer()
+
+	NSCOP.PrintDebug("Initialized controls for player: ", ply)
+end
+
 ---Loads the controls for the player and syncs them with the server
 ---<br>REALM: CLIENT
 function DataManager.LoadControls()
@@ -17,16 +29,8 @@ function DataManager.LoadControls()
 
 	local controlsExits = ply:GetPData("NSCOP_Controls", false)
 
-	-- TODO: Export to its own function
 	if not controlsExits then
-		ply.NSCOP = ply.NSCOP or {}
-		ply.NSCOP.Controls = defaultControls
-
-		net.Start(DataManager.NetworkMessage.CL_InitControls)
-		net.SendToServer()
-
-		NSCOP.PrintDebug("Initialized controls for player: ", ply)
-		return
+		DataManager.InitControls()
 	end
 
 	---@type NSCOP.Controls
@@ -40,7 +44,6 @@ function DataManager.LoadControls()
 	net.SendToServer()
 
 	NSCOP.PrintDebug("Loaded controls for player: ", ply)
-	PrintTable(data)
 end
 
 function DataManager.SaveControls()
@@ -81,6 +84,7 @@ function DataManager.UpdateControlsKey(key, newValue)
 		return
 	end
 
+	local oldValue = ply.NSCOP.Controls[key].Button
 	ply.NSCOP.Controls[key].Button = newValue
 
 	net.Start(DataManager.NetworkMessage.CL_UpdateControlsKey)
@@ -88,6 +92,8 @@ function DataManager.UpdateControlsKey(key, newValue)
 	---@diagnostic disable-next-line: param-type-mismatch
 	net.WriteUInt(newValue, 8)
 	net.SendToServer()
+
+	NSCOP.Utils.RunHook("NSCOP.ControlsUpdated", ply, key, oldValue, newValue)
 end
 
 ---Reads the character data from the net message and returns it as characterData table
@@ -97,6 +103,7 @@ end
 function DataManager.NetReadCharacterData()
 	---@type NSCOP.CharacterData
 	local characterData = {
+		Name = net.ReadString(),
 		HairType = net.ReadUInt(4),
 		NoseType = net.ReadUInt(4),
 		EyeType = net.ReadUInt(4),
@@ -106,7 +113,16 @@ function DataManager.NetReadCharacterData()
 		HairColor = net.ReadUInt(4),
 		EyeColor = net.ReadUInt(4),
 		Size = net.ReadFloat(),
-		Outfit = net.ReadUInt(5)
+		Outfit = net.ReadUInt(5),
+		Race = net.ReadUInt(2),
+		Profession = net.ReadUInt(2),
+		Class = net.ReadUInt(3),
+		Level = net.ReadUInt(10),
+		Experience = net.ReadFloat(),
+		SkillPoints = net.ReadUInt(8),
+		Money = net.ReadUInt(32),
+		Inventory = DataManager.NetReadInventoryData(),
+		Skills = DataManager.NetReadSkillsData(),
 	}
 
 	return characterData
@@ -118,8 +134,8 @@ end
 ---@return integer[]
 function DataManager.NetReadInventoryData()
 	local inventoryLength = net.ReadUInt(16)
-	local inventoryData = {}
-
+    local inventoryData = {}
+	
 	for i = 1, inventoryLength do
 		inventoryData[i] = net.ReadUInt(16)
 	end
@@ -151,17 +167,7 @@ function DataManager.NetReadPlayerData()
 	local playerData = {
 		PlayerId = -1,
 		CharacterId = net.ReadUInt(2),
-		CharacterName = net.ReadString(),
 		CharacterData = DataManager.NetReadCharacterData(),
-		Race = net.ReadUInt(2),
-		Profession = net.ReadUInt(2),
-		Class = net.ReadUInt(3),
-		Level = net.ReadUInt(10),
-		Experience = net.ReadFloat(),
-		SkillPoints = net.ReadUInt(8),
-		Money = net.ReadUInt(32),
-		Inventory = DataManager.NetReadInventoryData(),
-		Skills = DataManager.NetReadSkillsData(),
 	}
 
 	return playerData
@@ -186,14 +192,13 @@ net.Receive(DataManager.NetworkMessage.SV_InitData, function()
 	local defaultData = DataManager.GetDefaultData()
 	local defaultControls = DataManager.GetDefaultControls()
 
-	ply.NSCOP = {
-		PlayerData = defaultData,
-		Controls = defaultControls
-	}
-
-	DataManager.LoadCharacterAppearance(ply)
+	ply.NSCOP = ply.NSCOP or {}
+	ply.NSCOP.PlayerData = defaultData
+	ply.NSCOP.Controls = defaultControls
 
 	NSCOP.PrintDebug("Initialized and loaded default data for player: ", ply:GetName())
+
+	ply:NSCOP_LoadAppearance()
 end)
 
 net.Receive(DataManager.NetworkMessage.SV_SyncData, function(len)
@@ -206,12 +211,10 @@ net.Receive(DataManager.NetworkMessage.SV_SyncData, function(len)
 
 	local ply = LocalPlayer()
 
-	ply.NSCOP = {
-		PlayerData = data,
-		Controls = ply.NSCOP.Controls or {}
-	}
+	ply.NSCOP = ply.NSCOP or {}
+	ply.NSCOP.PlayerData = data
 
-	DataManager.LoadCharacterAppearance(ply)
+	ply:NSCOP_LoadAppearance()
 end)
 
 --#region ConCommands

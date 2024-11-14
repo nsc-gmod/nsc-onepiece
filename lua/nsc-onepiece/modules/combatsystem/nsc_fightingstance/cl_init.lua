@@ -58,11 +58,15 @@ function NSCOP.FightingStance:DrawSkills()
 
 	for i = 1, 6, 1 do
 		local margin = 70
-		self:DrawSkill(screenScaleW(852.5, true) + screenScaleW((i - 1) * margin), screenScaleH(1050, true),
-			i == selectedSkill)
+		self:DrawSkill(screenScaleW(852.5, true) + screenScaleW((i - 1) * margin), screenScaleH(1050, true), i == selectedSkill)
 	end
 end
 
+---Draws a skill slot on the HUD
+---<br>REALM: CLIENT
+---@param x number
+---@param y number
+---@param active boolean If the skill is active
 function NSCOP.FightingStance:DrawSkill(x, y, active)
 	local finalMat = skillRect
 	local skillSize = screenScaleW(64)

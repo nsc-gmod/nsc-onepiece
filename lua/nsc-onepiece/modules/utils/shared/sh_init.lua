@@ -13,7 +13,7 @@ local Utils = NSCOP.Utils
 ---@param type NSCOP.NetworkVarType Type of the network var
 ---@param name string A unique name for the network var
 function Utils.NetworkVar(entity, type, name)
-	-- We need to disable the diagnostic, because there is no other way to get around this, this should be fixed in the gmod type definitions
+	-- We need to disable the diagnostic, because there is no other way to get around this, this should be fixed in the gmod's type definitions
 	---@diagnostic disable-next-line: missing-parameter, param-type-mismatch
 	entity:NetworkVar(type, name)
 end
@@ -47,6 +47,7 @@ end
 ---@overload fun(eventName: "CalcView", identifier: string, func: fun(ply: Player, pos: Vector, angles: Angle, fov: number), return: table)
 ---@overload fun(eventName: "NSCOP.PlayerLoaded", identifier: string, func: fun(ply: Player))
 ---@overload fun(eventName: "NSCOP.ButtonStateChanged", identifier: string, func: fun(buttonData: NSCOP.ButtonData, lastState: NSCOP.ButtonState, newState: NSCOP.ButtonState))
+---@overload fun(eventName: "NSCOP.ControlsUpdated", identifier: string, func: fun(ply: Player, key: NSCOP.ButtonType, oldValue: NSCOP.ButtonValue, newValue: NSCOP.ButtonValue))
 function Utils.AddHook(eventName, identifier, func)
 	hook.Add(eventName, identifier, func)
 end
@@ -74,7 +75,6 @@ function Utils.GetConfigValue(key, defaultValue)
 	return NSCOP.Config[key] or defaultValue
 end
 
---TODO: Refactor this in the future
 ---Returns players for the console command autocomplete
 ---<br>REALM: SHARED
 ---@param commandName string The name of the command
@@ -84,9 +84,10 @@ end
 ---@return string[] playersAutocomplete
 function Utils.GetPlayersAutocomplete(commandName, cmd, argStr, args)
 	local playersAutocomplete = {}
+	local lowerArgStr = argStr:Trim():lower()
 
 	for _, currentPly in player.Iterator() do
-		if not currentPly:GetName():lower():StartsWith(argStr:Trim():lower()) then continue end
+		if not currentPly:GetName():lower():StartsWith(lowerArgStr) then continue end
 
 		---@cast currentPly Player
 		table.insert(playersAutocomplete, commandName .. " " .. currentPly:GetName())
@@ -155,6 +156,37 @@ function MPlayer:NSCOP_GetMoveDirection(ignoreZAxis)
 	end
 
 	return moveDirection:GetNormalized()
+end
+
+--Loads the character data for the player entity
+---<br>REALM: SHARED
+function MPlayer:NSCOP_LoadAppearance()
+	if not self:IsValid() then return end
+
+	if not self.NSCOP then
+		NSCOP.PrintDebug("Player has no NSCOP table")
+		return
+	end
+
+	if not self.NSCOP.PlayerData then
+		NSCOP.PrintDebug("Player has no PlayerData table")
+		return
+	end
+
+	local characterData = self.NSCOP.PlayerData.CharacterData
+
+	-- self:SetModel("OUR CUSTOM MODEL")
+	-- self:SetSkin(characterData.SkinColor)
+	-- self:SetBodygroup(NSCOP.BodyGroup.Hair, characterData.HairType)
+	-- self:SetBodygroup(NSCOP.BodyGroup.Nose, characterData.NoseType)
+	-- self:SetBodygroup(NSCOP.BodyGroup.Eye, characterData.EyeType)
+	-- self:SetBodygroup(NSCOP.BodyGroup.Eyebrow, characterData.EyebrowType)
+	-- self:SetBodygroup(NSCOP.BodyGroup.Mouth, characterData.MouthType)
+	-- self:SetBodygroup(NSCOP.BodyGroup.Outfit, characterData.Outfit)
+	-- self:SetPlayerColor(Vector(characterData.HairColor / 255, characterData.EyeColor / 255, 0))
+	self:SetModelScale(characterData.Size, 0.000001) -- 0.000001 to avoid a bug with SetModelScale
+
+	NSCOP.PrintDebug("Loaded character appearance for", self:GetName())
 end
 
 ---Returns whether the player is using a combat swep

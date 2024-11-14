@@ -4,4 +4,6 @@ NSCOP.IncludeShared("shared/sh_init.lua")
 NSCOP.IncludeServer("server/sv_init.lua")
 NSCOP.IncludeClient("client/cl_init.lua")
 
+NSCOP.IncludeShared("shared/sh_bit_operations.lua")
+
 NSCOP.PrintFileLoaded()

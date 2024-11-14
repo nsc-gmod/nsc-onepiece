@@ -15,7 +15,11 @@ function Test:UseSkill()
 	print('original crazy shit')
 
 	if SERVER then
-		owner:TakeDamage(1)
+		local damageInfo = DamageInfo()
+		damageInfo:SetDamageCustom(NSCOP.Utils.FlagAdd(NSCOP.DamageType.IgnoreIFrames, NSCOP.DamageType.IgnoreBlock))
+		damageInfo:SetDamage(1)
+
+		owner:TakeDamageInfo(damageInfo)
 	end
 end
 

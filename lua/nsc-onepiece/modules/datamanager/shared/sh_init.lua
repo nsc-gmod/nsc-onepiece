@@ -84,6 +84,7 @@ NSCOP.BodyGroup = {
 ---@alias NSCOP.Controls {[NSCOP.ButtonType]:  NSCOP.ButtonData}
 
 ---@class NSCOP.CharacterData
+---@field Name string
 ---@field HairType integer
 ---@field NoseType integer
 ---@field EyeType integer
@@ -94,12 +95,6 @@ NSCOP.BodyGroup = {
 ---@field EyeColor integer
 ---@field Size number
 ---@field Outfit integer
-
----@class NSCOP.PlayerData
----@field PlayerId integer
----@field CharacterId integer
----@field CharacterName string
----@field CharacterData NSCOP.CharacterData
 ---@field Race NSCOP.Race
 ---@field Profession NSCOP.Profession
 ---@field Class NSCOP.Class
@@ -110,9 +105,15 @@ NSCOP.BodyGroup = {
 ---@field Inventory integer[]
 ---@field Skills integer[]
 
+---@class NSCOP.PlayerData
+---@field PlayerId integer
+---@field CharacterId integer
+---@field CharacterData NSCOP.CharacterData
+
 ---@class Player.NSCOP
 ---@field PlayerData? NSCOP.PlayerData
 ---@field Controls? NSCOP.Controls
+---@field IFramesTime? number Invincibility frames time
 
 ---@class Player
 ---@field NSCOP? Player.NSCOP
@@ -141,8 +142,8 @@ function DataManager.GetDefaultData()
 	local playerData = {
 		PlayerId = 0,
 		CharacterId = 0,
-		CharacterName = "",
 		CharacterData = {
+			Name = "",
 			HairType = 0,
 			NoseType = 0,
 			EyeType = 0,
@@ -152,27 +153,28 @@ function DataManager.GetDefaultData()
 			HairColor = 0,
 			EyeColor = 0,
 			Size = 1,
-			Outfit = 0
+			Outfit = 0,
+			Race = NSCOP.Race.None,
+			Profession = NSCOP.Profession.None,
+			Class = NSCOP.Class.None,
+			Level = 1,
+			Experience = 0,
+			SkillPoints = 0,
+			Money = 0,
+			Inventory = {},
+			Skills = {}
 		},
-		Race = NSCOP.Race.None,
-		Profession = NSCOP.Profession.None,
-		Class = NSCOP.Class.None,
-		Level = 1,
-		Experience = 0,
-		SkillPoints = 0,
-		Money = 0,
-		Inventory = {},
-		Skills = {}
 	}
 
-	playerData.CharacterName =
+	-- Dummy data
+	playerData.CharacterData.Name =
 	"This is a supper super long dummy name which should never happen, but Lets test how heavy this can get "
-	for i = 1, 200 do
-		table.insert(playerData.Inventory, i)
+	for i = 1, 2000 do
+		table.insert(playerData.CharacterData.Inventory, i)
 	end
 
-	for i = 1, 200 do
-		table.insert(playerData.Skills, i)
+	for i = 1, 2000 do
+		table.insert(playerData.CharacterData.Skills, i)
 	end
 
 	return playerData
@@ -275,39 +277,6 @@ function DataManager.NetReadControls()
 	end
 
 	return controlsData
-end
-
--- TODO: Move this somewhere else
---Loads the character on the player entity
----<br>REALM: SHARED
----@param ply Player
-function DataManager.LoadCharacterAppearance(ply)
-	if not ply:IsValid() then return end
-
-	if not ply.NSCOP then
-		NSCOP.PrintDebug("Player has no NSCOP table")
-		return
-	end
-
-	if not ply.NSCOP.PlayerData then
-		NSCOP.PrintDebug("Player has no PlayerData table")
-		return
-	end
-
-	local characterData = ply.NSCOP.PlayerData.CharacterData
-
-	-- ply:SetModel("OUR CUSTOM MODEL")
-	-- ply:SetSkin(characterData.SkinColor)
-	-- ply:SetBodygroup(NSCOP.BodyGroup.Hair, characterData.HairType)
-	-- ply:SetBodygroup(NSCOP.BodyGroup.Nose, characterData.NoseType)
-	-- ply:SetBodygroup(NSCOP.BodyGroup.Eye, characterData.EyeType)
-	-- ply:SetBodygroup(NSCOP.BodyGroup.Eyebrow, characterData.EyebrowType)
-	-- ply:SetBodygroup(NSCOP.BodyGroup.Mouth, characterData.MouthType)
-	-- ply:SetBodygroup(NSCOP.BodyGroup.Outfit, characterData.Outfit)
-	-- ply:SetPlayerColor(Vector(characterData.HairColor / 255, characterData.EyeColor / 255, 0))
-	ply:SetModelScale(characterData.Size, 0.000001) -- 0.000001 to avoid a bug with SetModelScale
-
-	NSCOP.PrintDebug("Loaded character appearance for", ply:GetName())
 end
 
 --#region ConCommands
