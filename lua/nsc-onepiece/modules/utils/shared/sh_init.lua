@@ -208,6 +208,8 @@ local MWeapon = FindMetaTable("Weapon")
 ---@nodiscard
 ---@return boolean isCombatSWEP
 function MWeapon:NSCOP_IsCombatSWEP()
+	-- Casting this to SWEP, because for some reason Weapon type does not have Base field
+	---@cast self SWEP
 	return self.Base == "nsc_fightingstance" or self:GetClass() == "nsc_fightingstance"
 end
 

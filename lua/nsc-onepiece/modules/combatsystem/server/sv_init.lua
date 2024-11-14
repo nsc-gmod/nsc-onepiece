@@ -47,6 +47,8 @@ end
 ---<br>REALM: Server
 ---@return number
 function MPlayer:NSCOP_GetIFrames()
+	if not self.NSCOP.IFramesTime then return -1 end
+
 	return self.NSCOP.IFramesTime - FrameNumber()
 end
 
