@@ -193,9 +193,9 @@ end
 ---<br>REALM: SHARED
 ---@nodiscard
 ---@return boolean isUsingCombatSWEP
-function MPlayer:NSCOP_IsUsingCombatSWEP() 
-	return IsValid( self:GetActiveWeapon() ) and self:GetActiveWeapon():NSCOP_IsCombatSWEP() 
-end 
+function MPlayer:NSCOP_IsUsingCombatSWEP()
+	return IsValid(self:GetActiveWeapon()) and self:GetActiveWeapon():NSCOP_IsCombatSWEP()
+end
 
 --#endregion
 
@@ -208,7 +208,7 @@ local MWeapon = FindMetaTable("Weapon")
 ---@nodiscard
 ---@return boolean isCombatSWEP
 function MWeapon:NSCOP_IsCombatSWEP()
-	return self.Base or self:GetClass() == "nsc_fightingstance"
+	return self.Base == "nsc_fightingstance" or self:GetClass() == "nsc_fightingstance"
 end
 
 --#endregion
@@ -225,7 +225,7 @@ local MVector = FindMetaTable("Vector")
 ---@param change number The amount that the current value is allowed to change by to approach the target. (It makes no difference whether this is positive or negative.)
 ---@return Vector changedVector
 function Utils.NSCOP_ApproachVector(currentPos, targetPos, change)
-	return Vector(math.Approach(currentPos.x, targetPos.x, change), math.Approach(currentPos.y, targetPos.y, change), math.Approach( currentPos.z, targetPos.z, change))
+	return Vector(math.Approach(currentPos.x, targetPos.x, change), math.Approach(currentPos.y, targetPos.y, change), math.Approach(currentPos.z, targetPos.z, change))
 end
 
 --#endregion

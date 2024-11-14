@@ -116,12 +116,13 @@ function NSCOP.SkillInstance:AssignWeapon(weapon)
 end
 
 function NSCOP.SkillInstance:Remove()
-	NSCOP.SkillInstance.AllInstances()[ self.InstanceId ] = nil
-	setmetatable( self, nil )
+	NSCOP.SkillInstance.AllInstances()[self.InstanceId] = nil
+	setmetatable(self, nil)
 
 	self = nil
 end
 
+---Uses the skill
 function NSCOP.SkillInstance:UseSkill()
 	--
 end

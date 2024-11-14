@@ -57,6 +57,8 @@ NSCOP.FightingStance.CanDodge = true
 NSCOP.FightingStance.DodgeForce = 100
 NSCOP.FightingStance.DodgeCD = 0.25
 
+NSCOP.FightingStance.IsMidDodge = false
+
 function NSCOP.FightingStance:SetupDataTables()
 	NSCOP.Utils.NetworkVar(self, "Bool", "CombatStance")
 	NSCOP.Utils.NetworkVar(self, "Int", "CombatStyle")
@@ -104,12 +106,12 @@ end
 function NSCOP.FightingStance:InitialSkillSetup()
 	self.InitialSkillSetupDone = true
 
-	self:SetSkillIntoSlot( 1, 1000 )
-	self:SetSkillIntoSlot( 2, 1000 )
-	self:SetSkillIntoSlot( 3, 1000 )
-	self:SetSkillIntoSlot( 4, 1000 )
-	self:SetSkillIntoSlot( 5, 1000 )
-	self:SetSkillIntoSlot( 6, 1000 )
+	self:SetSkillIntoSlot(1, 1000)
+	self:SetSkillIntoSlot(2, 1000)
+	self:SetSkillIntoSlot(3, 1000)
+	self:SetSkillIntoSlot(4, 1000)
+	self:SetSkillIntoSlot(5, 1000)
+	self:SetSkillIntoSlot(6, 1000)
 
 	---@type NSCOP.SkillInstance
 	self:CreateSkillInstance(NSCOP.Skill.SkillIDs.MoonStepDodge)
@@ -136,7 +138,6 @@ function NSCOP.FightingStance:SecondaryAttack()
 		if CLIENT then
 			owner:ChatPrint("No skill selected!")
 		end
-		NSCOP.PrintDebug("No skill selected!")
 		return
 	end
 
@@ -144,6 +145,8 @@ function NSCOP.FightingStance:SecondaryAttack()
 	local currentSkill = self["GetSkillSlot" .. tostring(self:GetSelectedSkill())](self)
 	---@type NSCOP.SkillInstance
 	local skillInstance = self:GetSkillInstance(currentSkill)
+
+	print("AAA")
 
 	skillInstance:UseSkill()
 
@@ -159,7 +162,7 @@ end
 function NSCOP.FightingStance:Think()
 	local owner = self:GetOwner()
 
-	if !self.InitialSkillSetupDone then
+	if ! self.InitialSkillSetupDone then
 		self:InitialSkillSetup()
 	end
 end
@@ -169,6 +172,7 @@ function NSCOP.FightingStance:Dodge(aerial)
 	if CurTime() < self:GetNextDodge() then return end
 
 	local moonStepDodge = self:GetSkillInstance(NSCOP.Skill.SkillIDs.MoonStepDodge)
+	---@cast moonStepDodge NSCOP.FightingStance.MoonStepDodge
 	moonStepDodge:UseSkill(aerial)
 end
 
@@ -206,7 +210,7 @@ end
 function NSCOP.FightingStance:AllSkills()
 	local allSkills = {}
 	for i = 1, 6 do
-		table.insert( allSkills, self["GetSkillSlot" .. tostring(i)](self) )
+		table.insert(allSkills, self["GetSkillSlot" .. tostring(i)](self))
 	end
 
 	return allSkills
@@ -225,7 +229,7 @@ function NSCOP.FightingStance:SetSkillIntoSlot(slot, skill, dontCreateInstance)
 		self.SkillInstances[skill] = nil
 	end
 
-	if !dontCreateInstance then
+	if ! dontCreateInstance then
 		self:CreateSkillInstance(skill)
 	end
 end
@@ -250,8 +254,6 @@ end
 function NSCOP.FightingStance:GetSkillInstance(skillId)
 	return self.SkillInstances[skillId]
 end
-
-
 
 --#endregion
 
