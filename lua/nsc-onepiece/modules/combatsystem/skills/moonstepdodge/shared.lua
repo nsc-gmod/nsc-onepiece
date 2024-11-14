@@ -58,6 +58,8 @@ function moonStepDodge:UseSkill( aerial )
 
     weapon.IsMidDodge = true
 
+    owner:NSCOP_SetIFrames(100)
+
     --FIXME: Sometimes the hook does not get removed on the client and keeps handling logic. A pretty big issue
     local hookName = "NSCOP.Skill.MoonStepDodge.HandleDodge." .. self.InstanceId
     NSCOP.Utils.AddHook("Think", hookName, function()
