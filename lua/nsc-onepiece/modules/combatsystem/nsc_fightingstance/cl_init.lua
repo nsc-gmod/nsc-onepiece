@@ -60,6 +60,8 @@ local buffBorder = Material("nsc-onepiece/hud/buffBorder.vmt")
 local screenScaleW = NSCOP.Utils.ScreenScaleW
 local screenScaleH = NSCOP.Utils.ScreenScaleH
 
+-- TODO: Optimize everything here in the future
+
 function NSCOP.FightingStance:DrawHUD()
 	self:DrawPlayerHUD()
 
