@@ -15,23 +15,23 @@
 ---@field GetSelectedSkill fun(): integer Gets the selected skill, -1 means no skill selected
 ---@field SetSelectedSkill fun(self: NSCOP.FightingStance, newValue: integer) Sets the selected skill, -1 means no skill selected
 ---@
----@field GetSkillSlot1 fun(): integer Gets the skill in the slot
----@field SetSkillSlot1 fun(self: NSCOP.FightingStance, newValue: integer) Sets the skill to the slot
+---@field GetSkillSlot1 fun(): NSCOP.SkillId Gets the skill in the slot
+---@field SetSkillSlot1 fun(self: NSCOP.FightingStance, newValue: NSCOP.SkillId) Sets the skill to the slot
 ---@
----@field GetSkillSlot2 fun(): integer Gets the skill in the slot
----@field SetSkillSlot2 fun(self: NSCOP.FightingStance, newValue: integer) Sets the skill to the slot
+---@field GetSkillSlot2 fun(): NSCOP.SkillId Gets the skill in the slot
+---@field SetSkillSlot2 fun(self: NSCOP.FightingStance, newValue: NSCOP.SkillId) Sets the skill to the slot
 ---@
----@field GetSkillSlot3 fun(): integer Gets the skill in the slot
----@field SetSkillSlot3 fun(self: NSCOP.FightingStance, newValue: integer) Sets the skill to the slot
+---@field GetSkillSlot3 fun(): NSCOP.SkillId Gets the skill in the slot
+---@field SetSkillSlot3 fun(self: NSCOP.FightingStance, newValue: NSCOP.SkillId) Sets the skill to the slot
 ---@
----@field GetSkillSlot4 fun(): integer Gets the skill in the slot
----@field SetSkillSlot4 fun(self: NSCOP.FightingStance, newValue: integer) Sets the skill to the slot
+---@field GetSkillSlot4 fun(): NSCOP.SkillId Gets the skill in the slot
+---@field SetSkillSlot4 fun(self: NSCOP.FightingStance, newValue: NSCOP.SkillId) Sets the skill to the slot
 ---@
----@field GetSkillSlot5 fun(): integer Gets the skill in the slot
----@field SetSkillSlot5 fun(self: NSCOP.FightingStance, newValue: integer) Sets the skill to the slot
+---@field GetSkillSlot5 fun(): NSCOP.SkillId Gets the skill in the slot
+---@field SetSkillSlot5 fun(self: NSCOP.FightingStance, newValue: NSCOP.SkillId) Sets the skill to the slot
 ---@
----@field GetSkillSlot6 fun(): integer Gets the skill in the slot
----@field SetSkillSlot6 fun(self: NSCOP.FightingStance, newValue: integer) Sets the skill to the slot
+---@field GetSkillSlot6 fun(): NSCOP.SkillId Gets the skill in the slot
+---@field SetSkillSlot6 fun(self: NSCOP.FightingStance, newValue: NSCOP.SkillId) Sets the skill to the slot
 
 ---@class NSCOP.FightingStance: SWEP
 NSCOP.FightingStance = {}
@@ -47,6 +47,21 @@ NSCOP.FightingStance.SkillInstances = NSCOP.FightingStance.SkillInstances or {}
 
 NSCOP.FightingStance.Spawnable = true
 NSCOP.FightingStance.AdminOnly = false
+
+NSCOP.FightingStance.ViewModel = ""
+NSCOP.FightingStance.WorldModel = ""
+
+NSCOP.FightingStance.Primary = {
+	ClipSize = -1,
+	DefaultClip = -1,
+	Automatic = false,
+}
+
+NSCOP.FightingStance.Secondary = {
+	ClipSize = -1,
+	DefaultClip = -1,
+	Automatic = false,
+}
 
 NSCOP.FightingStance.MaxCombo = 5
 
@@ -79,6 +94,8 @@ function NSCOP.FightingStance:Initialize()
 	self:ResetCooldowns()
 	self:ResetVars()
 	self:SetCombatStance(true)
+
+	self:SetHoldType("normal")
 
 	if SERVER then
 		timer.Simple(0, function()
@@ -114,7 +131,7 @@ function NSCOP.FightingStance:InitialSkillSetup()
 	self:SetSkillIntoSlot(6, 1000)
 
 	---@type NSCOP.SkillInstance
-	self:CreateSkillInstance(NSCOP.Skill.SkillIDs.MoonStepDodge)
+	self:CreateSkillInstance(NSCOP.Skill.SkillId.MoonStepDodge)
 end
 
 function NSCOP.FightingStance:PrimaryAttack()
@@ -143,13 +160,14 @@ function NSCOP.FightingStance:SecondaryAttack()
 
 	---@type integer
 	local currentSkill = self["GetSkillSlot" .. tostring(self:GetSelectedSkill())](self)
-	---@type NSCOP.SkillInstance
 	local skillInstance = self:GetSkillInstance(currentSkill)
 
-	print("AAA")
+	if not skillInstance then return end;
 
 	skillInstance:UseSkill()
 
+	print("Skill Instances")
+	PrintTable(self.SkillInstances)
 	NSCOP.Print("Secondary Attack")
 
 	self:SetNextSecondaryFire(CurTime() + self.SecondaryCD)
@@ -171,7 +189,7 @@ end
 function NSCOP.FightingStance:Dodge(aerial)
 	if CurTime() < self:GetNextDodge() then return end
 
-	local moonStepDodge = self:GetSkillInstance(NSCOP.Skill.SkillIDs.MoonStepDodge)
+	local moonStepDodge = self:GetSkillInstance(NSCOP.Skill.SkillId.MoonStepDodge)
 	---@cast moonStepDodge NSCOP.FightingStance.MoonStepDodge
 	moonStepDodge:UseSkill(aerial)
 end
@@ -206,7 +224,8 @@ function NSCOP.FightingStance:ResetCooldowns()
 	self:SetNextDodge(curTime + self.DodgeCD)
 end
 
----@return table All equipped skills
+---Returns all equipped skills
+---@return integer[] skillIds Skills ids of all equipped skills
 function NSCOP.FightingStance:AllSkills()
 	local allSkills = {}
 	for i = 1, 6 do
@@ -216,25 +235,33 @@ function NSCOP.FightingStance:AllSkills()
 	return allSkills
 end
 
----@param slot integer Slot
----@param skill NSCOP.Skills|integer Skill
----@param dontCreateInstance boolean|nil Don't create a skill instance automatically
-function NSCOP.FightingStance:SetSkillIntoSlot(slot, skill, dontCreateInstance)
+---Sets a skill into a slot. Duplicate skill instances are not supported and only the last instance will be kept
+---@param slot integer Slot to set the skill into
+---@param skill NSCOP.SkillId Skill Id to set into the slot
+---@param shouldCreateInstance? boolean Don't create a skill instance automatically
+function NSCOP.FightingStance:SetSkillIntoSlot(slot, skill, shouldCreateInstance)
+	if shouldCreateInstance == nil then
+		shouldCreateInstance = true
+	end
+
 	self["SetSkillSlot" .. tostring(slot)](self, skill)
 
 	if self:GetSkillInstance(skill) then
 		local instance = self:GetSkillInstance(skill)
 
-		instance:Remove()
-		self.SkillInstances[skill] = nil
+		if instance then
+			instance:Remove()
+			self.SkillInstances[skill] = nil
+		end
 	end
 
-	if ! dontCreateInstance then
+	if shouldCreateInstance then
 		self:CreateSkillInstance(skill)
 	end
 end
 
----@param skillId NSCOP.Skills|integer Skill to create instance of
+---Creates an instance of a skill and assigns it to the weapon
+---@param skillId NSCOP.SkillId|integer Skill to create instance of
 function NSCOP.FightingStance:CreateSkillInstance(skillId)
 	local skill = NSCOP.Skill.GetSkillByID(skillId)
 
@@ -246,13 +273,32 @@ function NSCOP.FightingStance:CreateSkillInstance(skillId)
 	local newInstance = skill:CreateInstance()
 	newInstance:AssignWeapon(self)
 
-	self.SkillInstances[newInstance.SkillID] = newInstance
+	self.SkillInstances[newInstance.Skill.SkillId] = newInstance
 end
 
----@param skillId NSCOP.Skills|integer Returns an instance of desired skill
----@return NSCOP.SkillInstance
+---Returns an instance of a skill
+---@param skillId NSCOP.SkillId|integer Returns an instance of desired skill
+---@return NSCOP.SkillInstance | nil
 function NSCOP.FightingStance:GetSkillInstance(skillId)
 	return self.SkillInstances[skillId]
+end
+
+---Returns the key of a skill
+---@param skillButtonType NSCOP.ButtonType
+---@return NSCOP.ButtonValue | nil
+function NSCOP.FightingStance:GetSkillButton(skillButtonType)
+	local owner = self:GetOwner()
+
+	if not owner:IsValid() then return end
+	if not owner:IsPlayer() then return end
+	---@cast owner Player
+
+	if not owner.NSCOP or not owner.NSCOP.Controls then
+		NSCOP.PrintDebug("Player has no controls data")
+		return
+	end
+
+	return owner.NSCOP.Controls[skillButtonType].Button
 end
 
 --#endregion

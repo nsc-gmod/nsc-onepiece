@@ -4,10 +4,31 @@ NSCOP.Skill = NSCOP.Skill or {}
 NSCOP.Skill.__index = NSCOP.Skill
 NSCOP.Skill.RegisteredSkills = NSCOP.Skill.RegisteredSkills or {}
 
----@class NSCOP.SkillInstance : NSCOP.Skill
+---@class NSCOP.SkillInstance
 NSCOP.SkillInstance = NSCOP.SkillInstance or {}
 NSCOP.SkillInstance.__index = NSCOP.SkillInstance
 NSCOP.SkillInstance.Instances = NSCOP.SkillInstance.Instances or {}
+
+---@class NSCOP.Skill
+---The skill's ID that will be used in code. Using an id of already existing skill may cause serious issues
+---@field SkillId NSCOP.SkillId
+---The skill's name that will be displayed anywhere
+---@field SkillName string | nil
+---REALM: CLIENT
+---<br>The skill's description that will be displayed in UI's
+---@field SkillDescription string | nil
+---REALM: CLIENT
+---<br>The skill icon which will be displayed in the UI's
+---@field SkillIcon string | nil Path to the icon
+---The table with all data that may be used in skill's functionality. You can put any data in here that you want to use later
+---@field SkillFunctionalData table | nil
+---@field SkillCD number
+
+---@class NSCOP.SkillInstance
+---@field Skill NSCOP.Skill
+---@field InstanceIndex integer
+---@field Weapon NSCOP.FightingStance | InvalidEntity
+---@field NextSkillUse number
 
 ---@class NSCOP.SkillData
 ---@field SkillId integer
@@ -15,9 +36,10 @@ NSCOP.SkillInstance.Instances = NSCOP.SkillInstance.Instances or {}
 ---@field SkillDescription string | nil
 ---@field SkillIcon string | nil
 ---@field SkillFunctionalData table | nil
+---@field SkillCD number | nil
 
----@enum NSCOP.Skills
-NSCOP.Skill.SkillIDs = {
+---@enum NSCOP.SkillId
+NSCOP.Skill.SkillId = {
 	BasicAttack = 1,
 	MoonStepDodge = 2,
 }
@@ -38,28 +60,16 @@ function NSCOP.Skill.RegisterSkill(skillData)
 		-- 	return
 	end
 
-	---The skill's ID that will be used in code. Using an id of already existing skill may cause serious issues
-	---@type NSCOP.Skills | integer
-	self.SkillID = skillId
-
-	---The skill's name that will be displayed anywhere
-	---@type string | nil
+	self.SkillId = skillId
 	self.SkillName = skillData.SkillName
 
 	if CLIENT then
-		---<br> REALM: CLIENT
-		---The skill's description that will be displayed in UI's
-		---@type string | nil
 		self.SkillDescription = skillData.SkillDescription
-
-		---<br> REALM: CLIENT
-		---The skill icon which will be displayed in the UI's
-		---@type string | nil
 		self.SkillIcon = skillData.SkillIcon
 	end
 
-	---The table with all data that may be used in skill's functionality. You can put any data in here that you want to use later
 	self.SkillFunctionalData = skillData.SkillFunctionalData
+	self.SkillCD = skillData.SkillCD or 0
 
 	NSCOP.Skill.RegisteredSkills[skillId] = self
 
@@ -94,35 +104,58 @@ function NSCOP.Skill:CreateInstance()
 	instance.CreateInstance = nil
 	instance.GetAllSkills = nil
 
-	---@type integer
-	instance.InstanceId = table.insert(NSCOP.SkillInstance.AllInstances(), instance)
+	instance.InstanceIndex = table.insert(NSCOP.SkillInstance.AllInstances(), instance)
+	instance.NextSkillUse = CurTime() + self.SkillCD
 
 	return instance --- SkillInstance object
 end
 
------@return table All existing Skill instances
+---Returns all existing Skill instances
+---@return table allInstances All existing Skill instances
 function NSCOP.SkillInstance.AllInstances()
 	return NSCOP.SkillInstance.Instances
 end
 
------@return NSCOP.Skill The Skill that the instance is derived from
+---Returns the Skill that the instance is derived from
+---@return NSCOP.Skill The Skill that the instance is derived from
 function NSCOP.SkillInstance:GetSkill()
 	return self.Skill
 end
 
----@param weapon NSCOP.FightingStance
+---Assigns a weapon to the Skill instance
+---@param weapon? NSCOP.FightingStance | InvalidEntity
 function NSCOP.SkillInstance:AssignWeapon(weapon)
+	if weapon == nil then
+		weapon = NULL
+	end
+
 	self.Weapon = weapon
 end
 
+---Removes the Skill instance
 function NSCOP.SkillInstance:Remove()
-	NSCOP.SkillInstance.AllInstances()[self.InstanceId] = nil
+	NSCOP.SkillInstance.AllInstances()[self.InstanceIndex] = nil
 	setmetatable(self, nil)
 
 	self = nil
 end
 
+---Returns the time left in seconds until the skill can be used
+function NSCOP.SkillInstance:GetSkillTime()
+	return self.NextSkillUse - CurTime()
+end
+
+---Returns if the skill can be used
+---@return boolean
+function NSCOP.SkillInstance:CanUseSkill()
+	return self:GetSkillTime() < 0
+end
+
+function NSCOP.SkillInstance:StartCooldown()
+	self.NextSkillUse = CurTime() + self.SkillCD
+end
+
 ---Uses the skill
 function NSCOP.SkillInstance:UseSkill()
-	--
+
 end

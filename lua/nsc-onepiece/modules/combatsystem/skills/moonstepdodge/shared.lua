@@ -1,7 +1,8 @@
 ---@class NSCOP.FightingStance.MoonStepDodge : NSCOP.SkillInstance
 NSCOP.FightingStance.MoonStepDodge = NSCOP.Skill.RegisterSkill({
-	SkillId = NSCOP.Skill.SkillIDs.MoonStepDodge,
+	SkillId = NSCOP.Skill.SkillId.MoonStepDodge,
 	SkillName = "Moonstep Dodge Directional",
+	SkillCD = 0.5
 })
 
 if ! NSCOP.FightingStance.MoonStepDodge then return end
@@ -13,9 +14,12 @@ local dodgeSpeed = 30
 
 ---@param aerial? boolean
 function moonStepDodge:UseSkill(aerial)
-	---@type NSCOP.FightingStance
+	if not self:CanUseSkill() then return end
+
 	local weapon = self.Weapon
 
+	if not weapon:IsValid() then return end
+	---@cast weapon NSCOP.FightingStance
 	if weapon.IsMidDodge then return end
 
 	local owner = weapon:GetOwner()
@@ -62,7 +66,7 @@ function moonStepDodge:UseSkill(aerial)
 	weapon.IsMidDodge = true
 
 	--FIXME: Sometimes the hook does not get removed on the client and keeps handling logic. A pretty big issue
-	local hookName = "NSCOP.Skill.MoonStepDodge.HandleDodge." .. self.InstanceId
+	local hookName = "NSCOP.Skill.MoonStepDodge.HandleDodge." .. self.InstanceIndex
 	NSCOP.Utils.AddHook("PlayerTick", hookName, function()
 		--Logic for stopping the dodge handling
 		if ! IsValid(owner) or ! IsValid(weapon) or owner:GetPos() == finalPos then
@@ -88,5 +92,5 @@ function moonStepDodge:UseSkill(aerial)
 
 	NSCOP.Print("Player dodged", owner)
 
-	weapon:SetNextDodge(CurTime() + weapon.DodgeCD)
+	self:StartCooldown()
 end

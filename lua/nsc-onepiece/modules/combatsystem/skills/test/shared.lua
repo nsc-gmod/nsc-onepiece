@@ -2,11 +2,14 @@
 local Test = NSCOP.Skill.RegisterSkill({
 	SkillId = 1000,
 	SkillName = "Test Skill",
+	SkillCD = 1
 })
 
 if not Test then return end
 
 function Test:UseSkill()
+	if not self:CanUseSkill() then return end
+
 	local weapon = self.Weapon
 
 	local owner = weapon:GetOwner()
@@ -21,6 +24,8 @@ function Test:UseSkill()
 
 		owner:TakeDamageInfo(damageInfo)
 	end
+
+	self:StartCooldown()
 end
 
 ---@class Test : NSCOP.SkillInstance

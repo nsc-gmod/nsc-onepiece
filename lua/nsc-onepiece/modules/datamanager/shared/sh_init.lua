@@ -55,6 +55,7 @@ NSCOP.ButtonType = {
 	RadialMenu = 12,
 	SkillMenu = 13,
 	EmoteMenu = 14,
+	ToggleCameraMode = 15,
 }
 
 ---@enum NSCOP.ButtonState
@@ -195,6 +196,7 @@ function DataManager.GetDefaultControls()
 		[NSCOP.ButtonType.SelectSkillSix] = { Button = KEY_6, State = NSCOP.KeyState.Up, StateTime = 0 },
 		[NSCOP.ButtonType.SkillDodge] = { Button = KEY_LALT, State = NSCOP.KeyState.Up, StateTime = 0 },
 		[NSCOP.ButtonType.SkillUse] = { Button = MOUSE_RIGHT, State = NSCOP.KeyState.Up, StateTime = 0 },
+		[NSCOP.ButtonType.ToggleCameraMode] = { Button = KEY_BACKSLASH, State = NSCOP.KeyState.Up, StateTime = 0 },
 	}
 
 	return controls
