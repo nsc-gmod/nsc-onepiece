@@ -10,6 +10,7 @@ CreateConVar("nsc_debug_debugmode", "0", { FCVAR_CHEAT, FCVAR_REPLICATED, FCVAR_
 NSCOP.Modules = {
 	Initializer = "initializer",
 	Utils = "utils",
+	AssetLoader = "assetLoader",
 	ConfigManager = "configmanager",
 	DataManager = "datamanager",
 	CombatSystem = "combatsystem",
