@@ -551,6 +551,60 @@ function SQL.UpdateSkills(ply)
 	sql.Commit()
 end
 
+---Updates the money for the player's current character
+---<br>REALM: SERVER
+---@param characterId integer The character id to update the money for
+---@param money integer The money to set
+function SQL.UpdateMoney(characterId, money)
+    SQL.EnableForeignKeys()
+
+    if characterId <= 0 then
+        NSCOP.PrintDebug("Character id is invalid: ", characterId)
+        return
+    end
+
+    local query = string.format([[
+		UPDATE nscop_character
+		SET money = %d
+		WHERE id = %d
+	]],
+        money,
+        characterId
+    )
+    local result = sql.Query(query)
+
+    if result == false then
+        NSCOP.PrintDebug("Failed to update money for character id: ", characterId)
+        SQL.DebugPrintQuery(query, true)
+        return
+    end
+end
+
+function SQL.UpdateExperience(characterId, experience)
+	SQL.EnableForeignKeys()
+
+	if characterId <= 0 then
+		NSCOP.PrintDebug("Character id is invalid: ", characterId)
+		return
+	end
+
+	local query = string.format([[
+		UPDATE nscop_character
+		SET experience = %d
+		WHERE id = %d
+	]],
+		experience,
+		characterId
+	)
+	local result = sql.Query(query)
+
+	if result == false then
+		NSCOP.PrintDebug("Failed to update experience for character id: ", characterId)
+		SQL.DebugPrintQuery(query, true)
+		return
+	end
+end
+
 --#endregion
 
 -- Create the server database
