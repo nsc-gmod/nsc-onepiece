@@ -55,6 +55,8 @@ local skillRectActive = Material("nsc-onepiece/hud/skillRect_Active.vmt")
 local skillRectCooldown = Material("nsc-onepiece/hud/skillRect_Cooldown.vmt")
 local skillRectActiveCooldown = Material("nsc-onepiece/hud/skillRect_Active_Cooldown.vmt")
 
+local buffBorder = Material("nsc-onepiece/hud/buffBorder.vmt")
+
 local screenScaleW = NSCOP.Utils.ScreenScaleW
 local screenScaleH = NSCOP.Utils.ScreenScaleH
 
@@ -66,10 +68,54 @@ end
 
 function NSCOP.FightingStance:DrawPlayerHUD()
 	self:DrawAvatar()
+	self:DrawAvatarBorder()
+	self:DrawBars()
 end
 
-function NSCOP.FightingStance:DrawAvatar()
-	local avatarSize = screenScaleW(128)
+function NSCOP.FightingStance:DrawBars()
+	local ply = LocalPlayer()
+	if not IsValid(ply) then return end
+
+	local health = ply:Health()
+	local maxHealth = ply:GetMaxHealth()
+	local healthPercentage = math.Clamp(health / maxHealth, 0, 1)
+
+	local barWidth = screenScaleW(300)
+	local barHeight = screenScaleH(25, true)
+	local barX = screenScaleW(160, true)
+	local barY = screenScaleH(940, true)
+
+	--Draw border
+	-- Draw background
+	draw.RoundedBox(8, barX, barY, barWidth, barHeight, Color(50, 50, 50, 200))
+	-- Draw health bar
+	draw.RoundedBox(8, barX, barY, barWidth * healthPercentage, barHeight, Color(192, 0, 59, 255))
+
+	-- Draw background
+	draw.RoundedBox(8, barX - 20, barY + 25, barWidth, barHeight, Color(50, 50, 50, 200))
+	-- Draw energy bar
+	draw.RoundedBox(8, barX - 20, barY + 25, barWidth * healthPercentage, barHeight, Color(183, 227, 249, 255))
+
+	-- Draw background
+	draw.RoundedBox(8, barX - 40, barY + 50, barWidth, barHeight, Color(50, 50, 50, 400))
+	-- Draw stamina bar
+	draw.RoundedBox(8, barX - 40, barY + 50, barWidth * healthPercentage, barHeight, Color(249, 211, 139, 255))
+
+	-- -- Draw health text
+	-- draw.SimpleTextOutlined(
+	-- 	string.format("%d / %d", health, maxHealth),
+	-- 	"NSCOP_Main_Small",
+	-- 	barX + barWidth / 2,
+	-- 	barY + barHeight / 2,
+	-- 	color_white,
+	-- 	TEXT_ALIGN_CENTER,
+	-- 	TEXT_ALIGN_CENTER,
+	-- 	2,
+	-- 	Color(0, 0, 0, 200))
+end
+
+function NSCOP.FightingStance:DrawAvatarBorder()
+	local avatarSize = screenScaleW(150)
 	local avatarX = screenScaleW(50, true)
 	local avatarY = screenScaleH(900, true)
 
@@ -79,19 +125,96 @@ function NSCOP.FightingStance:DrawAvatar()
 
 	local ply = LocalPlayer()
 	if not IsValid(ply) then return end
-
-	self:DrawPlayerModelInAvatar(ply, avatarX, avatarY, avatarSize)
 end
 
-function NSCOP.FightingStance:DrawPlayerModelInAvatar(ply, x, y, size)
-	local ang = Angle(0, RealTime() * 10 % 360, 0) -- Rotate the model slowly
-	local pos = Vector(0, 0, 60)                -- Position the model
+local avatarCamPos = Vector(35, 0, 30)
+local avatarLookAt = Vector(0, 0, 40)
+function NSCOP.FightingStance:DrawAvatar()
+	local owner = self:GetOwner()
 
-	cam.Start3D(pos, ang, 70, x, y, size, size)
-	render.SuppressEngineLighting(true)
-	ply:DrawModel()
-	render.SuppressEngineLighting(false)
-	cam.End3D()
+	if not IsValid(owner) then return end
+	---@cast owner Player
+
+	local baseAvatarRadius = 150
+	local avatarRadius = screenScaleW(baseAvatarRadius / 2)
+	local avatarX = screenScaleW(50 + (baseAvatarRadius / 2), true)
+	local avatarY = screenScaleH(900 + (baseAvatarRadius / 2), true)
+
+	draw.NoTexture()
+
+	if ! IsValid(self.PlayerAvatar) then
+		self.PlayerAvatar = vgui.Create("DModelPanel")
+		self.PlayerAvatar:SetModel(owner:GetModel())
+		self.PlayerAvatar:SetFOV(25)
+		self.PlayerAvatar:SetCamPos(avatarCamPos)
+		self.PlayerAvatar:SetLookAt(avatarLookAt)
+		self.PlayerAvatar:SetPos(avatarX - avatarRadius, avatarY - avatarRadius * 1.15)
+		self.PlayerAvatar:SetSize(avatarRadius * 2, avatarRadius * 2)
+		self.PlayerAvatar:SetVisible(true)
+
+		function self.PlayerAvatar.Entity:GetPlayerColor() return owner:GetPlayerColor() end
+
+		function self.PlayerAvatar.Entity:GetSkin() return owner:GetSkin() end
+
+		self.PlayerAvatar.Think = function()
+			if ! IsValid(self) then
+				self.PlayerAvatar:Remove()
+				return
+			end
+
+			self.PlayerAvatar:SetModel(owner:GetModel())
+			local PlayerModelBGroup = ""
+			local PlayerModelSkin = owner:GetSkin() or 0
+
+			for n = 0, owner:GetNumBodyGroups() do
+				PlayerModelBGroup = PlayerModelBGroup .. owner:GetBodygroup(n)
+			end
+
+			local ent = self.PlayerAvatar.Entity
+			ent:SetBodyGroups(PlayerModelBGroup)
+			ent:SetSkin(PlayerModelSkin)
+		end
+
+		self.PlayerAvatar.LayoutEntity = function(ent)
+			local layoutEnt = self.PlayerAvatar:GetEntity()
+			if IsValid(layoutEnt) and layoutEnt.LookupBone and layoutEnt:LookupBone("ValveBiped.Bip01_Head1") and layoutEnt:LookupBone("ValveBiped.Bip01_Head1") != -1 then
+				local headPos = math.Round(layoutEnt:GetBonePosition(layoutEnt:LookupBone("ValveBiped.Bip01_Head1")).z) + 2
+				if avatarCamPos.z != headPos then
+					avatarCamPos.z = headPos
+					avatarLookAt.z = headPos
+				end
+				self.PlayerAvatar:SetCamPos(avatarCamPos)
+				self.PlayerAvatar:SetLookAt(avatarLookAt)
+			end
+
+			return
+		end
+		self.PlayerAvatar:SetPaintedManually(true)
+	else
+		render.ClearStencil()
+		render.SetStencilEnable(true)
+
+		render.SetStencilWriteMask(1)
+		render.SetStencilTestMask(1)
+
+		render.SetStencilFailOperation(STENCILOPERATION_KEEP)
+		render.SetStencilZFailOperation(STENCILOPERATION_KEEP)
+		render.SetStencilPassOperation(STENCILOPERATION_REPLACE)
+		render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_ALWAYS)
+		render.SetStencilReferenceValue(1)
+
+		surface.SetDrawColor(255, 255, 255, 1)
+		draw.NoTexture()
+		NSCOP.Utils.DrawCircle(avatarX, avatarY, avatarRadius, 30)
+		surface.DrawRect(50, 900 - avatarRadius * 4, avatarRadius * 2, avatarRadius * 5)
+
+		render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_EQUAL)
+		surface.SetDrawColor(255, 255, 255, 255)
+		self.PlayerAvatar:SetPaintedManually(false)
+		self.PlayerAvatar:PaintManual()
+		self.PlayerAvatar:SetPaintedManually(true)
+		render.SetStencilEnable(false)
+	end
 end
 
 ---Draws the skills on the HUD
@@ -166,7 +289,8 @@ end
 local disabledHud = {
 	["CHudWeaponSelection"] = true,
 	["CHudAmmo"] = true,
-	["CHudSecondaryAmmo"] = true
+	["CHudSecondaryAmmo"] = true,
+	["CHudHealth"] = true
 }
 
 ---@type {[NSCOP.HUDBaseElement]: boolean}
@@ -187,4 +311,10 @@ function NSCOP.FightingStance:HUDShouldDraw(element)
 	end
 
 	return true
+end
+
+function NSCOP.FightingStance:OnRemove()
+	if IsValid(self.PlayerAvatar) then
+		self.PlayerAvatar:Remove()
+	end
 end
