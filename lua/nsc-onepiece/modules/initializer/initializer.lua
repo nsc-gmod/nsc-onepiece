@@ -12,3 +12,27 @@ NSCOP.IncludeModule(NSCOP.Modules.DataManager)
 NSCOP.IncludeModule(NSCOP.Modules.CombatSystem)
 
 NSCOP.PrintFileLoaded()
+
+
+-- TODO: Dirty, move this away once we know where :)
+if CLIENT then
+	---@alias NSCOP.Font "NSCOP_Main" | ""
+
+	surface.CreateFont("NSCOP_Main", {
+		font = system.IsLinux() and "fantaisie_artistique.ttf" or "FantaisieArtistique",
+		extended = false,
+		size = ScreenScale(12),
+		weight = 500,
+		blursize = 0,
+		scanlines = 0,
+		antialias = true,
+		underline = false,
+		italic = false,
+		strikeout = false,
+		symbol = false,
+		rotary = false,
+		shadow = false,
+		additive = false,
+		outline = false,
+	})
+end
