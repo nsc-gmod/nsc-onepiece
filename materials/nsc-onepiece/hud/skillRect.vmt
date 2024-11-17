@@ -2,7 +2,4 @@
 {
 	"$basetexture" "nsc-onepiece/hud/skillRect"
 	"$translucent" 1
-	"$vertexcolor" 1
-	"$vertexalpha" 1
-	
 }

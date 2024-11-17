@@ -1,0 +1,5 @@
+"UnlitGeneric"
+{
+	"$basetexture" "nsc-onepiece/hud/debuff"
+	"$translucent" 1
+}
