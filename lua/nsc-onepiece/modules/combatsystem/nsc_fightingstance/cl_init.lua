@@ -85,7 +85,6 @@ function NSCOP.FightingStance:DrawBars()
 	local barX = screenScaleW(160, true)
 	local barY = screenScaleH(940, true)
 
-	--Draw border
 	-- Draw background
 	draw.RoundedBox(8, barX, barY, barWidth, barHeight, Color(50, 50, 50, 200))
 	-- Draw health bar
@@ -100,6 +99,29 @@ function NSCOP.FightingStance:DrawBars()
 	draw.RoundedBox(8, barX - 40, barY + 50, barWidth, barHeight, Color(50, 50, 50, 400))
 	-- Draw stamina bar
 	draw.RoundedBox(8, barX - 40, barY + 50, barWidth * healthPercentage, barHeight, Color(249, 211, 139, 255))
+
+	local xpBarX = screenScaleW(775, true)
+	local xpBarY = screenScaleH(990, true)
+	local xpBarWidth = screenScaleW(450)
+	local xpBarHeight = screenScaleH(30, true)
+	local experiencePercentage = math.Clamp(ply.NSCOP.PlayerData.CharacterData.Experience / 1000, 0, 1)
+
+	-- Draw background
+	draw.RoundedBox(8, xpBarX, xpBarY, xpBarWidth, xpBarHeight, Color(50, 50, 50, 400))
+	-- Draw experience bar
+	draw.RoundedBox(8, xpBarX, xpBarY, xpBarWidth * experiencePercentage, xpBarHeight, Color(208, 104, 160, 255))
+	--Draw xp text
+	draw.SimpleTextOutlined(
+		string.format("%d / %d", ply.NSCOP.PlayerData.CharacterData.Experience, 1000),
+		"NSCOP_Main_Small",
+		xpBarX + xpBarWidth / 2,
+		xpBarY + xpBarHeight / 2,
+		color_white,
+		TEXT_ALIGN_CENTER,
+		TEXT_ALIGN_CENTER,
+		2,
+		Color(0, 0, 0, 255))
+
 
 	-- -- Draw health text
 	-- draw.SimpleTextOutlined(
@@ -223,7 +245,7 @@ function NSCOP.FightingStance:DrawSkills()
 
 	for i = 1, 6, 1 do
 		local margin = 70
-		self:DrawSkill(screenScaleW(852.5, true) + screenScaleW((i - 1) * margin), screenScaleH(1050, true), i, i == selectedSkill)
+		self:DrawSkill(screenScaleW(852.5, true) + screenScaleW((i - 1) * margin), screenScaleH(975, true), i, i == selectedSkill)
 	end
 end
 
