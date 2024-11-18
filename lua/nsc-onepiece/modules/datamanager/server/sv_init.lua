@@ -2,6 +2,7 @@
 NSCOP.DataManager = NSCOP.DataManager or {}
 NSCOP.DataManager.AutosaveEnabled = NSCOP.Utils.GetConfigValue("AutosaveEnabled", true)
 NSCOP.DataManager.AutosaveInterval = NSCOP.Utils.GetConfigValue("AutosaveInterval", 300)
+NSCOP.DataManager.AutosaveQueueTime = NSCOP.Utils.GetConfigValue("AutosaveQueueTime", 0.01)
 NSCOP.DataManager.NextAutoSave = CurTime() + NSCOP.DataManager.AutosaveInterval
 
 ---@class NSCOP.DataManager
@@ -189,9 +190,8 @@ function DataManager.LevelUp(ply, continuedLevelUp)
 	local playerXp = ply.NSCOP.PlayerData.CharacterData.Experience
 	local xpToNextLevel = DataManager.GetXpToNextLevel(ply)
 
-	if not playerXp or not xpToNextLevel then
-		NSCOP.PrintDebug("Failed to level up player: ", ply)
-		return
+	if not playerXp then
+		NSCOP.Error("Failed to level up, player does not have experience data")
 	end
 
 	if playerXp < xpToNextLevel then
@@ -207,7 +207,7 @@ function DataManager.LevelUp(ply, continuedLevelUp)
 
 	--- TODO: Simulate how heavy it would be for 100 players to level up every second, so we can determine if we should save to db right after levelling up
 
-    net.Start(DataManager.NetworkMessage.SV_LevelUp)
+	net.Start(DataManager.NetworkMessage.SV_LevelUp)
 	net.Send(ply)
 
 	NSCOP.Utils.RunHook("NSCOP.PlayerLeveledUp", ply, ply.NSCOP.PlayerData.CharacterData.Level)
@@ -240,13 +240,21 @@ end)
 
 NSCOP.Utils.AddHook("Tick", "NSCOP.DataManager.Autosave", function()
 	if not DataManager.AutosaveEnabled then return end
+	-- print(DataManager.NextAutoSave - CurTime())
 	if CurTime() < DataManager.NextAutoSave then return end
+
+	local saveQueueTime = 0
 
 	for _, ply in player.Iterator() do
 		---@cast ply Player
 		if not ply:IsValid() then continue end
 
-		DataManager.SaveData(ply)
+		timer.Simple(saveQueueTime, function()
+			if not ply:IsValid() then return end
+			DataManager.SaveData(ply)
+		end)
+
+		saveQueueTime = saveQueueTime + DataManager.AutosaveQueueTime
 	end
 
 	NSCOP.PrintDebug("Autosaved all player data")

@@ -8,7 +8,16 @@ NSCOP.Config.PathToConfigs = "nsc-configuration/"
 NSCOP.Config.Main = {}
 NSCOP.Config.Main.ModulesEnabled = {}
 
----@alias NSCOP.ConfigKey "ModulesEnabled" | "AutosaveEnabled" | "AutosaveInterval"
+---@alias NSCOP.ConfigKey
+---|"ModulesEnabled"
+---|"AutosaveEnabled"
+---|"AutosaveInterval"
+---|"AutosaveQueueTime"
+---|"MaxLevel"
+---|"XpMultiplier"
+---|"InitialXpToLevel"
+---|"XpPerLevel"
+---|"SkillPointsPerLevel"
 
 ---Returns if the module is enabled or not
 ---@param module NSCOP.ModuleType

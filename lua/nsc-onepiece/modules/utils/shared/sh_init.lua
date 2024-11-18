@@ -75,7 +75,7 @@ end
 function Utils.GetConfigValue(key, defaultValue)
 	if not NSCOP.Config then return defaultValue end
 
-	return NSCOP.Config[key] or defaultValue
+	return NSCOP.Config.Main[key] or defaultValue
 end
 
 ---Returns players for the console command autocomplete

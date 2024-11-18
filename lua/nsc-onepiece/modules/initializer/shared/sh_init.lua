@@ -30,6 +30,12 @@ function NSCOP.PrintDebug(...)
 	print("[NSCOP Debug]", ...)
 end
 
+---Errors with a message and a [NSCOP] prefix
+---@param ... any Arguments to print
+function NSCOP.Error(...)
+	error("[NSCOP]", ...)
+end
+
 local debugConVar = GetConVar("nsc_debug_debugmode")
 ---Returns true if Debug Mode is enabled
 ---<br>REALM: SHARED
