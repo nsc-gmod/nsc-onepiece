@@ -42,7 +42,7 @@ NSCOP.Utils.AddHook("PlayerButtonDown", "NSCOP.CombatSystem.PlayerButtonDown", f
 
 	if buttonData then
 		local oldState = buttonData.State
-		buttonData.State = NSCOP.KeyState.Pressed
+		buttonData.State = NSCOP.ButtonState.Pressed
 		buttonData.StateTime = CurTime()
 
 		NSCOP.Utils.RunHook("NSCOP.ButtonStateChanged", buttonData, oldState, buttonData.State)
@@ -50,10 +50,10 @@ NSCOP.Utils.AddHook("PlayerButtonDown", "NSCOP.CombatSystem.PlayerButtonDown", f
 
 		timer.Simple(0, function()
 			if not ply:IsValid() then return end
-			if buttonData.State != NSCOP.KeyState.Pressed then return end
+			if buttonData.State != NSCOP.ButtonState.Pressed then return end
 
 			if buttonData then
-				buttonData.State = NSCOP.KeyState.Down
+				buttonData.State = NSCOP.ButtonState.Down
 				buttonData.StateTime = CurTime()
 
 				NSCOP.Utils.RunHook("NSCOP.ButtonStateChanged", buttonData, oldState, buttonData.State)
@@ -77,7 +77,7 @@ NSCOP.Utils.AddHook("PlayerButtonDown", "NSCOP.CombatSystem.PlayerButtonDown", f
 
 	local dodgeButton = ply.NSCOP.Controls[NSCOP.ButtonType.SkillDodge]
 
-	if button == KEY_SPACE and (dodgeButton.State == NSCOP.KeyState.Down or dodgeButton.State == NSCOP.KeyState.Pressed) then
+	if button == KEY_SPACE and (dodgeButton.State == NSCOP.ButtonState.Down or dodgeButton.State == NSCOP.ButtonState.Pressed) then
 		weapon:Dodge(true)
 	end
 end)
@@ -96,7 +96,7 @@ NSCOP.Utils.AddHook("PlayerButtonUp", "NSCOP.CombatSystem.PlayerButtonUp", funct
 
 	if buttonData then
 		local oldState = buttonData.State
-		buttonData.State = NSCOP.KeyState.Released
+		buttonData.State = NSCOP.ButtonState.Released
 		buttonData.StateTime = CurTime()
 
 		NSCOP.Utils.RunHook("NSCOP.ButtonStateChanged", buttonData, oldState, buttonData.State)
@@ -104,10 +104,10 @@ NSCOP.Utils.AddHook("PlayerButtonUp", "NSCOP.CombatSystem.PlayerButtonUp", funct
 
 		timer.Simple(0, function()
 			if not ply:IsValid() then return end
-			if buttonData.State != NSCOP.KeyState.Released then return end
+			if buttonData.State != NSCOP.ButtonState.Released then return end
 
 			if buttonData then
-				buttonData.State = NSCOP.KeyState.Up
+				buttonData.State = NSCOP.ButtonState.Up
 				buttonData.StateTime = CurTime()
 
 				NSCOP.Utils.RunHook("NSCOP.ButtonStateChanged", buttonData, oldState, buttonData.State)
@@ -126,14 +126,14 @@ NSCOP.Utils.AddHook("NSCOP.ButtonStateChanged", "NSCOP.CombatSystem.ButtonStateC
 	local oldStateName = ""
 	local newStateName = ""
 
-	for key, value in pairs(NSCOP.KeyState) do
+	for key, value in pairs(NSCOP.ButtonState) do
 		if value == oldState then
 			oldStateName = key
 			break
 		end
 	end
 
-	for key, value in pairs(NSCOP.KeyState) do
+	for key, value in pairs(NSCOP.ButtonState) do
 		if value == newState then
 			newStateName = key
 			break

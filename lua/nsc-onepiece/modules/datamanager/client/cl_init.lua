@@ -81,7 +81,7 @@ function DataManager.UpdateControlsKey(key, newValue)
 		return
 	end
 
-	if ply.NSCOP.Controls[key] == newValue then
+	if ply.NSCOP.Controls[key].Button == newValue then
 		NSCOP.PrintDebug("New value is the same as the old value")
 		return
 	end
@@ -94,6 +94,8 @@ function DataManager.UpdateControlsKey(key, newValue)
 	---@diagnostic disable-next-line: param-type-mismatch
 	net.WriteUInt(newValue, 8)
 	net.SendToServer()
+
+	DataManager.SaveControls()
 
 	NSCOP.Utils.RunHook("NSCOP.ControlsUpdated", ply, key, oldValue, newValue)
 end

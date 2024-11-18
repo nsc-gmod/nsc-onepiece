@@ -61,7 +61,7 @@ NSCOP.ButtonType = {
 }
 
 ---@enum NSCOP.ButtonState
-NSCOP.KeyState = {
+NSCOP.ButtonState = {
 	Up = 0,
 	Down = 1,
 	Pressed = 2,
@@ -228,15 +228,15 @@ end
 function DataManager.GetDefaultControls()
 	---@type NSCOP.Controls
 	local controls = {
-		[NSCOP.ButtonType.SelectSkillOne] = { Button = KEY_1, State = NSCOP.KeyState.Up, StateTime = 0 },
-		[NSCOP.ButtonType.SelectSkillTwo] = { Button = KEY_2, State = NSCOP.KeyState.Up, StateTime = 0 },
-		[NSCOP.ButtonType.SelectSkillThree] = { Button = KEY_3, State = NSCOP.KeyState.Up, StateTime = 0 },
-		[NSCOP.ButtonType.SelectSkillFour] = { Button = KEY_4, State = NSCOP.KeyState.Up, StateTime = 0 },
-		[NSCOP.ButtonType.SelectSkillFive] = { Button = KEY_5, State = NSCOP.KeyState.Up, StateTime = 0 },
-		[NSCOP.ButtonType.SelectSkillSix] = { Button = KEY_6, State = NSCOP.KeyState.Up, StateTime = 0 },
-		[NSCOP.ButtonType.SkillDodge] = { Button = KEY_LALT, State = NSCOP.KeyState.Up, StateTime = 0 },
-		[NSCOP.ButtonType.SkillUse] = { Button = MOUSE_RIGHT, State = NSCOP.KeyState.Up, StateTime = 0 },
-		[NSCOP.ButtonType.ToggleCameraMode] = { Button = KEY_BACKSLASH, State = NSCOP.KeyState.Up, StateTime = 0 },
+		[NSCOP.ButtonType.SelectSkillOne] = { Button = KEY_1, State = NSCOP.ButtonState.Up, StateTime = 0 },
+		[NSCOP.ButtonType.SelectSkillTwo] = { Button = KEY_2, State = NSCOP.ButtonState.Up, StateTime = 0 },
+		[NSCOP.ButtonType.SelectSkillThree] = { Button = KEY_3, State = NSCOP.ButtonState.Up, StateTime = 0 },
+		[NSCOP.ButtonType.SelectSkillFour] = { Button = KEY_4, State = NSCOP.ButtonState.Up, StateTime = 0 },
+		[NSCOP.ButtonType.SelectSkillFive] = { Button = KEY_5, State = NSCOP.ButtonState.Up, StateTime = 0 },
+		[NSCOP.ButtonType.SelectSkillSix] = { Button = KEY_6, State = NSCOP.ButtonState.Up, StateTime = 0 },
+		[NSCOP.ButtonType.SkillDodge] = { Button = KEY_LALT, State = NSCOP.ButtonState.Up, StateTime = 0 },
+		[NSCOP.ButtonType.SkillUse] = { Button = MOUSE_RIGHT, State = NSCOP.ButtonState.Up, StateTime = 0 },
+		[NSCOP.ButtonType.ToggleCameraMode] = { Button = KEY_BACKSLASH, State = NSCOP.ButtonState.Up, StateTime = 0 },
 	}
 
 	return controls
