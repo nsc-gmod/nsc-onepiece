@@ -9,6 +9,13 @@ NSCOP.Config.Main.ModulesEnabled[NSCOP.Modules.DataManager] = true  -- The DataM
 --#region General
 
 -- TODO: Should be probably moved to NSCOP.Config.DataManager
+
+NSCOP.Config.Main.MaxLevel = 100
+NSCOP.Config.Main.XpMultiplier = 1
+NSCOP.Config.Main.InitialXpToLevel = 100
+NSCOP.Config.Main.XpPerLevel = 100
+NSCOP.Config.Main.SkillPointsPerLevel = 1
+
 NSCOP.Config.Main.AutosaveEnabled = true
 NSCOP.Config.Main.AutosaveInterval = 300
 --// Put the configurations you consider the main ones there
