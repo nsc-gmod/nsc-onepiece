@@ -11,42 +11,11 @@ NSCOP.SQLTable = {
 	InventoryTable = "nscop_character_inventory",
 	SkillTable = "nscop_character_skill",
 	ActiveSkillTable = "nscop_character_active_skill",
-	itemTable = "nscop_item"
+	ItemTable = "nscop_item",
 }
 
 -- TODO: Start using enum table keys
 -- TODO: Add more types
-
----Prints the query to the console, with an optional error message
----<br>REALM: SERVER
----@param query string The query to print
----@param isError boolean Whether the query is an error
-function SQL.DebugPrintQuery(query, isError)
-	NSCOP.PrintDebug("Query: ", query)
-
-	if isError then
-		NSCOP.Error("Error: ", sql.LastError())
-	end
-end
-
----Returns the SQL escaped string
----<br>REALM: SERVER
----@param value any The value to escape
-function SQL.Str(value)
-	local finalValue = value
-
-	if istable(finalValue) then
-		finalValue = util.TableToJSON(finalValue)
-	end
-
-	return SQLStr(finalValue)
-end
-
----Enables foreign keys in the database
----<br>REALM: SERVER
-function SQL.EnableForeignKeys()
-	sql.Query("PRAGMA foreign_keys = ON;")
-end
 
 ---Creates the database if it doesn't exist
 ---<br>REALM: SERVER
