@@ -10,16 +10,16 @@ NSCOP.Config.Main.ModulesEnabled[NSCOP.Modules.DataManager] = true  -- The DataM
 
 -- TODO: Should be probably moved to NSCOP.Config.DataManager
 
-NSCOP.Config.Main.MaxLevel = 100
-NSCOP.Config.Main.XpMultiplier = 1
-NSCOP.Config.Main.InitialXpToLevel = 100
-NSCOP.Config.Main.XpPerLevel = 100
-NSCOP.Config.Main.SkillPointsPerLevel = 1
+NSCOP.Config.Main.MaxLevel = 100 -- The maximum level a player can reach
+NSCOP.Config.Main.XpMultiplier = 1 -- The multiplier for the XP gained
+NSCOP.Config.Main.InitialXpToLevel = 100 -- The initial XP needed to level up
+NSCOP.Config.Main.XpPerLevel = 100 -- The XP needed to level up for each level after the initial one. This adds up per level
+NSCOP.Config.Main.SkillPointsPerLevel = 1 -- The amount of skill points a player gets per level
 
-NSCOP.Config.Main.AutosaveEnabled = true
-NSCOP.Config.Main.AutosaveInterval = 300
+NSCOP.Config.Main.AutosaveEnabled = true -- Enable or disable the autosave feature
+NSCOP.Config.Main.AutosaveInterval = 300 -- The interval in seconds between each autosave
 NSCOP.Config.Main.AutosaveQueueTime = 0.01 -- Time to wait before saving each player's data. Helps with performance and does not save every player in the same frame
---// Put the configurations you consider the main ones there
+
 
 --#endregion
 
