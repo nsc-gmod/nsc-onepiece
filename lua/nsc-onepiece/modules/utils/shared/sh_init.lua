@@ -48,6 +48,7 @@ end
 ---@overload fun(eventName: "NSCOP.PlayerLoaded", identifier: string, func: fun(ply: Player))
 ---@overload fun(eventName: "NSCOP.ButtonStateChanged", identifier: string, func: fun(buttonData: NSCOP.ButtonData, lastState: NSCOP.ButtonState, newState: NSCOP.ButtonState))
 ---@overload fun(eventName: "NSCOP.ControlsUpdated", identifier: string, func: fun(ply: Player, key: NSCOP.ButtonType, oldValue: NSCOP.ButtonValue, newValue: NSCOP.ButtonValue))
+---@overload fun(eventName: "NSCOP.PlayerLeveledUp", identifier: string, ply: Player, newLevel: number)
 ---@overload fun(eventName: "CalcView", identifier: string, func: fun(ply: Player, pos: Vector, angles: Angle, fov: number, znear: number, zfar: number), return: CamData)
 function Utils.AddHook(eventName, identifier, func)
 	hook.Add(eventName, identifier, func)
@@ -59,6 +60,7 @@ end
 ---@vararg any The arguments to pass to the hook. Maximum of 6 arguments
 ---@overload fun(eventName: "NSCOP.PlayerLoaded", ply: Player)
 ---@overload fun(eventName: "NSCOP.ButtonStateChanged", identifier: string, func: fun(buttonData: NSCOP.ButtonData, lastState: NSCOP.ButtonState, newState: NSCOP.ButtonState))
+---@overload fun(eventName: "NSCOP.PlayerLeveledUp", ply: Player, newLevel: number)
 function Utils.RunHook(eventName, ...)
 	hook.Run(eventName, ...)
 end

@@ -106,7 +106,10 @@ function NSCOP.FightingStance:DrawBars()
 	local xpBarY = screenScaleH(990, true)
 	local xpBarWidth = screenScaleW(450)
 	local xpBarHeight = screenScaleH(30, true)
-	local experiencePercentage = math.Clamp(ply.NSCOP.PlayerData.CharacterData.Experience / 1000, 0, 1)
+
+	local playerXp = ply.NSCOP.PlayerData.CharacterData.Experience
+	local xpToNextLevel = NSCOP.DataManager.GetXpToNextLevel(ply)
+	local experiencePercentage = math.Clamp(playerXp / xpToNextLevel, 0, 1)
 
 	-- Draw background
 	draw.RoundedBox(8, xpBarX, xpBarY, xpBarWidth, xpBarHeight, Color(50, 50, 50, 400))
@@ -114,7 +117,7 @@ function NSCOP.FightingStance:DrawBars()
 	draw.RoundedBox(8, xpBarX, xpBarY, xpBarWidth * experiencePercentage, xpBarHeight, Color(208, 104, 160, 255))
 	--Draw xp text
 	draw.SimpleTextOutlined(
-		string.format("%d / %d", ply.NSCOP.PlayerData.CharacterData.Experience, 1000),
+		string.format("%d / %d", ply.NSCOP.PlayerData.CharacterData.Experience, xpToNextLevel),
 		"NSCOP_Main_Small",
 		xpBarX + xpBarWidth / 2,
 		xpBarY + xpBarHeight / 2,

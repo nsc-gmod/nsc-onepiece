@@ -134,8 +134,8 @@ end
 ---@return integer[]
 function DataManager.NetReadInventoryData()
 	local inventoryLength = net.ReadUInt(16)
-    local inventoryData = {}
-	
+	local inventoryData = {}
+
 	for i = 1, inventoryLength do
 		inventoryData[i] = net.ReadUInt(16)
 	end
@@ -215,6 +215,20 @@ net.Receive(DataManager.NetworkMessage.SV_SyncData, function(len)
 	ply.NSCOP.PlayerData = data
 
 	ply:NSCOP_LoadAppearance()
+end)
+
+net.Receive(DataManager.NetworkMessage.SV_LevelUp, function(len)
+	local ply = LocalPlayer()
+
+	local xpToNextLevel = DataManager.GetXpToNextLevel(ply)
+	local playerXp = ply.NSCOP.PlayerData.CharacterData.Experience
+	local skillPointPerLevel = NSCOP.Config.Main.SkillPointsPerLevel or 1
+
+	ply.NSCOP.PlayerData.CharacterData.Level = ply.NSCOP.PlayerData.CharacterData.Level + 1
+	ply.NSCOP.PlayerData.CharacterData.Experience = playerXp - xpToNextLevel
+	ply.NSCOP.PlayerData.CharacterData.SkillPoints = ply.NSCOP.PlayerData.CharacterData.SkillPoints + skillPointPerLevel
+
+	NSCOP.PrintDebug("Player leveled up to level: ", ply.NSCOP.PlayerData.CharacterData.Level)
 end)
 
 --#region ConCommands

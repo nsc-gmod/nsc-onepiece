@@ -7,11 +7,13 @@ local DataManager = NSCOP.DataManager
 ---@enum NSCOP.DataManager.NetworkMessage
 NSCOP.DataManager.NetworkMessage = {
 	SV_InitData = "NSCOP.DataManager.SV.InitData",
-	SV_SyncData = "NSCOP.DataManager.SV.SyncData",
+    SV_SyncData = "NSCOP.DataManager.SV.SyncData",
+	SV_LevelUp = "NSCOP.DataManager.SV.LevelUp",
 	CL_ClientReady = "NSCOP.DataManager.CL.ClientReady",
 	CL_InitControls = "NSCOP.DataManager.CL.InitControls",
 	CL_SyncControls = "NSCOP.DataManager.CL.SyncControls",
 	CL_UpdateControlsKey = "NSCOP.DataManager.CL.UpdateControlsKey",
+	CL_SpendPoint = "NSCOP.DataManager.CL.SpendPoint",
 }
 
 ---@enum NSCOP.Race
@@ -279,6 +281,48 @@ function DataManager.NetReadControls()
 	end
 
 	return controlsData
+end
+
+---Gets the experience required to level up
+---<br>REALM: SHARED
+---@param ply Player
+---@return number? xpToNextLevel
+function DataManager.GetXpToNextLevel(ply)
+	if not ply.NSCOP or not ply.NSCOP.PlayerData then
+		NSCOP.PrintDebug("Player has no NSCOP data")
+		return
+	end
+
+	local initialXp = NSCOP.Config.Main.InitialXpToLevel or 100
+	local xpPerLevel = NSCOP.Config.Main.XpPerLevel or 100
+	local level = ply.NSCOP.PlayerData.CharacterData.Level or 1
+
+	return initialXp + (xpPerLevel * (level - 1))
+end
+
+function DataManager.GainXp(ply, xp)
+    if not ply.NSCOP or not ply.NSCOP.PlayerData then
+        NSCOP.PrintDebug("Player has no NSCOP data")
+        return
+    end
+	
+    local xpToNextLevel = DataManager.GetXpToNextLevel(ply)
+
+	if not xpToNextLevel then
+		return
+	end
+
+	local playerXp = ply.NSCOP.PlayerData.CharacterData.Experience
+
+	ply.NSCOP.PlayerData.CharacterData.Experience = ply.NSCOP.PlayerData.CharacterData.Experience + xp
+
+	if ply.NSCOP.PlayerData.CharacterData.Experience >= xpToNextLevel then
+		ply.NSCOP.PlayerData.CharacterData.Experience = ply.NSCOP.PlayerData.CharacterData.Experience - xpToNextLevel
+		ply.NSCOP.PlayerData.CharacterData.Level = ply.NSCOP.PlayerData.CharacterData.Level + 1
+		ply.NSCOP.PlayerData.CharacterData.SkillPoints = ply.NSCOP.PlayerData.CharacterData.SkillPoints + 1
+
+		NSCOP.Print("Player leveled up to: ", ply.NSCOP.PlayerData.CharacterData.Level)
+	end
 end
 
 --#region ConCommands

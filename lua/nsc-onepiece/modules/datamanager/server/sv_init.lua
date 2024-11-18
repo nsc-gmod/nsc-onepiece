@@ -179,6 +179,45 @@ function DataManager.SaveData(ply)
 	NSCOP.PrintDebug("Saved data for player: ", ply)
 end
 
+---Levels up the player
+---<br>REALM: SERVER
+---@param ply Player
+---@param continuedLevelUp boolean? True if if the level up is a continuation of a previous level up. Should always be false when calling manually
+function DataManager.LevelUp(ply, continuedLevelUp)
+	if not ply.NSCOP then return end
+
+	local playerXp = ply.NSCOP.PlayerData.CharacterData.Experience
+	local xpToNextLevel = DataManager.GetXpToNextLevel(ply)
+
+	if not playerXp or not xpToNextLevel then
+		NSCOP.PrintDebug("Failed to level up player: ", ply)
+		return
+	end
+
+	if playerXp < xpToNextLevel then
+		NSCOP.PrintDebug("Player does not have enough experience to level up")
+		return
+	end
+
+	local skillPointPerLevel = NSCOP.Config.Main.SkillPointsPerLevel or 1
+
+	ply.NSCOP.PlayerData.CharacterData.Level = ply.NSCOP.PlayerData.CharacterData.Level + 1
+	ply.NSCOP.PlayerData.CharacterData.Experience = playerXp - xpToNextLevel
+	ply.NSCOP.PlayerData.CharacterData.SkillPoints = ply.NSCOP.PlayerData.CharacterData.SkillPoints + skillPointPerLevel
+
+	--- TODO: Simulate how heavy it would be for 100 players to level up every second, so we can determine if we should save to db right after levelling up
+
+    net.Start(DataManager.NetworkMessage.SV_LevelUp)
+	net.Send(ply)
+
+	NSCOP.Utils.RunHook("NSCOP.PlayerLeveledUp", ply, ply.NSCOP.PlayerData.CharacterData.Level)
+
+	NSCOP.PrintDebug("Player leveled up: ", ply)
+
+	-- Level up again if player has enough experience
+	DataManager.LevelUp(ply, true)
+end
+
 -- A table of all players that have connected to the server, so we don't need to load data for them again
 local loadedPlayers = {}
 
