@@ -53,8 +53,17 @@ function DataManager.NetWriteCharacterData(characterData)
 	net.WriteFloat(characterData.Experience)
 	net.WriteUInt(characterData.SkillPoints, 8)
 	net.WriteUInt(characterData.Money, 32)
+	net.WriteUInt(characterData.RingId, 32)
+	net.WriteUInt(characterData.NecklaceId, 32)
+	net.WriteUInt(characterData.ChestId, 32)
+	net.WriteUInt(characterData.GlovesId, 32)
+	net.WriteUInt(characterData.LegsId, 32)
+	net.WriteUInt(characterData.BootsId, 32)
+	net.WriteUInt(characterData.WeaponId, 32)
+	net.WriteUInt(characterData.HatId, 32)
 	DataManager.NetWriteInventoryData(characterData.Inventory)
 	DataManager.NetWriteSkillsData(characterData.Skills)
+	DataManager.NetWriteActiveSkillsData(characterData.ActiveSkills)
 
 	NSCOP.PrintDebug("Character data size", net.BytesWritten())
 end
@@ -75,6 +84,15 @@ function DataManager.NetWriteSkillsData(skillsData)
 	DataManager.NetWriteSequentialTable(skillsData, 16, 8)
 
 	NSCOP.PrintDebug("Skills data size", net.BytesWritten())
+end
+
+---Writes the active skills data of the player to the current net message
+---<br>REALM: SERVER
+---@param activeSkillsData integer[]
+function DataManager.NetWriteActiveSkillsData(activeSkillsData)
+	DataManager.NetWriteSequentialTable(activeSkillsData, 4, 8)
+
+	NSCOP.PrintDebug("Active skills data size", net.BytesWritten())
 end
 
 function DataManager.InitData(ply)
@@ -122,21 +140,28 @@ function DataManager.LoadData(ply)
 	local characterData = NSCOP.SQL.GetCharacterData(characterId)
 
 	if not characterData then
-		NSCOP.PrintDebug("Failed to load data for player: ", ply)
+		NSCOP.Error("Failed to load data for player: ", ply)
 		return
 	end
 
 	local inventoryData = NSCOP.SQL.GetCharacterInventoryData(characterId)
 
 	if not inventoryData then
-		NSCOP.PrintDebug("Failed to load inventory data for player: ", ply)
+		NSCOP.Error("Failed to load inventory data for player: ", ply)
 		return
 	end
 
 	local skillsData = NSCOP.SQL.GetCharacterSkillsData(characterId)
 
 	if not skillsData then
-		NSCOP.PrintDebug("Failed to load skills data for player: ", ply)
+		NSCOP.Error("Failed to load skills data for player: ", ply)
+		return
+	end
+
+	local activeSkillsData = NSCOP.SQL.GetCharacterActiveSkillsData(characterId)
+
+	if not activeSkillsData then
+		NSCOP.Error("Failed to load active skills data for player: ", ply)
 		return
 	end
 
@@ -148,6 +173,7 @@ function DataManager.LoadData(ply)
 	ply.NSCOP.PlayerData = data
 	ply.NSCOP.PlayerData.CharacterData.Inventory = inventoryData
 	ply.NSCOP.PlayerData.CharacterData.Skills = skillsData
+	ply.NSCOP.PlayerData.CharacterData.ActiveSkills = activeSkillsData
 
 	net.Start(DataManager.NetworkMessage.SV_SyncData)
 	net.WriteUInt(data.CharacterId, 2)
@@ -173,6 +199,7 @@ function DataManager.SaveData(ply)
 	if ply.NSCOP.PlayerData.CharacterId then
 		NSCOP.SQL.UpdateInventory(ply)
 		NSCOP.SQL.UpdateSkills(ply)
+		NSCOP.SQL.UpdateActiveSkills(ply.NSCOP.PlayerData.CharacterId, ply.NSCOP.PlayerData.CharacterData.ActiveSkills)
 
 		NSCOP.PrintDebug("Updated inventory and skills for player: ", ply)
 	end

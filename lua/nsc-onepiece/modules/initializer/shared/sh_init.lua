@@ -33,7 +33,14 @@ end
 ---Errors with a message and a [NSCOP] prefix
 ---@param ... any Arguments to print
 function NSCOP.Error(...)
-	error("[NSCOP]", ...)
+	local args = { ... }
+	for i = 1, #args do
+		args[i] = tostring(args[i])
+	end
+
+	local joinedArgs = table.concat(args, " ")
+
+	error("[NSCOP] " .. joinedArgs)
 end
 
 local debugConVar = GetConVar("nsc_debug_debugmode")

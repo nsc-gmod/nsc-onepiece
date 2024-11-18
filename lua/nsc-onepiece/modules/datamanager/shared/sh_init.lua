@@ -105,8 +105,17 @@ NSCOP.BodyGroup = {
 ---@field Experience number
 ---@field SkillPoints integer
 ---@field Money integer
+---@field RingId integer
+---@field NecklaceId integer
+---@field ChestId integer
+---@field GlovesId integer
+---@field LegsId integer
+---@field BootsId integer
+---@field WeaponId integer
+---@field HatId integer
 ---@field Inventory integer[]
 ---@field Skills integer[]
+---@field ActiveSkills integer[]
 
 ---@class NSCOP.PlayerData
 ---@field PlayerId integer
@@ -121,7 +130,23 @@ NSCOP.BodyGroup = {
 ---@class Player
 ---@field NSCOP? Player.NSCOP
 
----Writes the sequential table data to the current net message
+---Reads sequential table data to the current net message
+---<br>REALM: SHARED
+---@param lengthBits integer
+---@param keyBits integer
+---@return integer[]
+function DataManager.NetReadSequentialTable(lengthBits, keyBits)
+	local length = net.ReadUInt(lengthBits)
+	local data = {}
+
+	for i = 1, length do
+		data[i] = net.ReadUInt(keyBits)
+	end
+
+	return data
+end
+
+---Writes sequential table data to the current net message
 ---<br>REALM: SHARED
 ---@generic T : integer[]
 ---@param data T
@@ -164,8 +189,17 @@ function DataManager.GetDefaultData()
 			Experience = 0,
 			SkillPoints = 0,
 			Money = 0,
+			RingId = 0,
+			NecklaceId = 0,
+			ChestId = 0,
+			GlovesId = 0,
+			LegsId = 0,
+			BootsId = 0,
+			WeaponId = 0,
+			HatId = 0,
 			Inventory = {},
-			Skills = {}
+			Skills = {},
+			ActiveSkills = {}
 		},
 	}
 
@@ -178,6 +212,10 @@ function DataManager.GetDefaultData()
 
 	for i = 1, 200 do
 		table.insert(playerData.CharacterData.Skills, i)
+	end
+
+	for i = 1, 10 do
+		table.insert(playerData.CharacterData.ActiveSkills, i)
 	end
 
 	return playerData

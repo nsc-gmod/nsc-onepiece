@@ -4,6 +4,8 @@ NSCOP.DataManager = NSCOP.DataManager or {}
 ---@class NSCOP.DataManager
 local DataManager = NSCOP.DataManager
 
+-- TODO: Finish porting controls to sql table
+
 function DataManager.InitControls()
 	local ply = LocalPlayer()
 
@@ -121,8 +123,17 @@ function DataManager.NetReadCharacterData()
 		Experience = net.ReadFloat(),
 		SkillPoints = net.ReadUInt(8),
 		Money = net.ReadUInt(32),
+		RingId = net.ReadUInt(32),
+		NecklaceId = net.ReadUInt(32),
+		ChestId = net.ReadUInt(32),
+		GlovesId = net.ReadUInt(32),
+		LegsId = net.ReadUInt(32),
+		BootsId = net.ReadUInt(32),
+		WeaponId = net.ReadUInt(32),
+		HatId = net.ReadUInt(32),
 		Inventory = DataManager.NetReadInventoryData(),
 		Skills = DataManager.NetReadSkillsData(),
+		ActiveSkills = DataManager.NetReadActiveSkillsData(),
 	}
 
 	return characterData
@@ -133,14 +144,7 @@ end
 ---@nodiscard
 ---@return integer[]
 function DataManager.NetReadInventoryData()
-	local inventoryLength = net.ReadUInt(16)
-	local inventoryData = {}
-
-	for i = 1, inventoryLength do
-		inventoryData[i] = net.ReadUInt(16)
-	end
-
-	return inventoryData
+	return DataManager.NetReadSequentialTable(16, 16)
 end
 
 ---Reads the skills data from the net message and returns an integer array
@@ -148,14 +152,15 @@ end
 ---@nodiscard
 ---@return integer[]
 function DataManager.NetReadSkillsData()
-	local skillsLength = net.ReadUInt(16)
-	local skillsData = {}
+	return DataManager.NetReadSequentialTable(16, 8)
+end
 
-	for i = 1, skillsLength do
-		skillsData[i] = net.ReadUInt(8)
-	end
-
-	return skillsData
+---Reads the active skills data from the net message and returns an integer array
+---<br>REALM: CLIENT
+---@nodiscard
+---@return integer[]
+function DataManager.NetReadActiveSkillsData()
+	return DataManager.NetReadSequentialTable(4, 8)
 end
 
 ---Reads the player data from the net message and returns it as playerData table
