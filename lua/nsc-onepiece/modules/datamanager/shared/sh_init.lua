@@ -7,7 +7,7 @@ local DataManager = NSCOP.DataManager
 ---@enum NSCOP.DataManager.NetworkMessage
 NSCOP.DataManager.NetworkMessage = {
 	SV_InitData = "NSCOP.DataManager.SV.InitData",
-    SV_SyncData = "NSCOP.DataManager.SV.SyncData",
+	SV_SyncData = "NSCOP.DataManager.SV.SyncData",
 	SV_LevelUp = "NSCOP.DataManager.SV.LevelUp",
 	CL_ClientReady = "NSCOP.DataManager.CL.ClientReady",
 	CL_InitControls = "NSCOP.DataManager.CL.InitControls",
@@ -172,11 +172,11 @@ function DataManager.GetDefaultData()
 	-- Dummy data
 	playerData.CharacterData.Name =
 	"This is a supper super long dummy name which should never happen, but Lets test how heavy this can get "
-	for i = 1, 2000 do
+	for i = 1, 200 do
 		table.insert(playerData.CharacterData.Inventory, i)
 	end
 
-	for i = 1, 2000 do
+	for i = 1, 200 do
 		table.insert(playerData.CharacterData.Skills, i)
 	end
 
@@ -286,11 +286,10 @@ end
 ---Gets the experience required to level up
 ---<br>REALM: SHARED
 ---@param ply Player
----@return number? xpToNextLevel
+---@return number xpToNextLevel
 function DataManager.GetXpToNextLevel(ply)
 	if not ply.NSCOP or not ply.NSCOP.PlayerData then
-		NSCOP.PrintDebug("Player has no NSCOP data")
-		return
+		NSCOP.Error("Could not get xp to next level for player, player has no NSCOP data")
 	end
 
 	local initialXp = NSCOP.Config.Main.InitialXpToLevel or 100
@@ -300,29 +299,39 @@ function DataManager.GetXpToNextLevel(ply)
 	return initialXp + (xpPerLevel * (level - 1))
 end
 
-function DataManager.GainXp(ply, xp)
-    if not ply.NSCOP or not ply.NSCOP.PlayerData then
-        NSCOP.PrintDebug("Player has no NSCOP data")
-        return
-    end
-	
-    local xpToNextLevel = DataManager.GetXpToNextLevel(ply)
+---Adds the xp to the player and levels up if the player has enough xp
+---<br>REALM: SHARED
+---@param ply Player
+---@param xp number
+function DataManager.AddXp(ply, xp)
+	if not ply.NSCOP or not ply.NSCOP.PlayerData then
+		NSCOP.Error("Could not gain xp for player, player has no NSCOP data")
+	end
 
-	if not xpToNextLevel then
-		return
+	local xpToNextLevel = DataManager.GetXpToNextLevel(ply)
+	local playerXp = ply.NSCOP.PlayerData.CharacterData.Experience
+	local newXp = playerXp + xp
+
+	ply.NSCOP.PlayerData.CharacterData.Experience = newXp
+
+	if SERVER and newXp >= xpToNextLevel then
+		DataManager.LevelUp(ply)
+	end
+end
+
+---Substracts the xp from the player
+---<br>REALM: SHARED
+---@param ply Player
+---@param xp number
+function DataManager.SubstractXp(ply, xp)
+	if not ply.NSCOP or not ply.NSCOP.PlayerData then
+		NSCOP.Error("Could not substract xp for player, player has no NSCOP data")
 	end
 
 	local playerXp = ply.NSCOP.PlayerData.CharacterData.Experience
+	local newXp = math.max(playerXp - xp, 0)
 
-	ply.NSCOP.PlayerData.CharacterData.Experience = ply.NSCOP.PlayerData.CharacterData.Experience + xp
-
-	if ply.NSCOP.PlayerData.CharacterData.Experience >= xpToNextLevel then
-		ply.NSCOP.PlayerData.CharacterData.Experience = ply.NSCOP.PlayerData.CharacterData.Experience - xpToNextLevel
-		ply.NSCOP.PlayerData.CharacterData.Level = ply.NSCOP.PlayerData.CharacterData.Level + 1
-		ply.NSCOP.PlayerData.CharacterData.SkillPoints = ply.NSCOP.PlayerData.CharacterData.SkillPoints + 1
-
-		NSCOP.Print("Player leveled up to: ", ply.NSCOP.PlayerData.CharacterData.Level)
-	end
+	ply.NSCOP.PlayerData.CharacterData.Experience = newXp
 end
 
 --#region ConCommands
@@ -349,14 +358,13 @@ concommand.Add("nscop_nscopdata_" .. (SERVER and "sv" or "cl"), function(ply, cm
 	end
 
 	if not ply.NSCOP then
-		NSCOP.PrintDebug("Player has no NSCOP data")
-		return
+		NSCOP.Error("Could not display data, player has no NSCOP data")
 	end
 
 	NSCOP.Print("NSCOP data for: ", ply:GetName())
 	PrintTable(ply.NSCOP)
 end, function(cmd, argStr, args)
-	return NSCOP.Utils.GetPlayersAutocomplete("nscop_display_nscopdata_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
+	return NSCOP.Utils.GetPlayersAutocomplete("nscop_nscopdata_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
 end)
 
 concommand.Add("nscop_playerdata_" .. (SERVER and "sv" or "cl"), function(ply, cmd, args, argStr)
@@ -381,14 +389,13 @@ concommand.Add("nscop_playerdata_" .. (SERVER and "sv" or "cl"), function(ply, c
 	end
 
 	if not ply.NSCOP then
-		NSCOP.PrintDebug("Player has no NSCOP data")
-		return
+		NSCOP.Error("Could not display data, player has no NSCOP data")
 	end
 
 	NSCOP.Print("Player data for: ", ply:GetName())
 	PrintTable(ply.NSCOP.PlayerData)
 end, function(cmd, argStr, args)
-	return NSCOP.Utils.GetPlayersAutocomplete("nscop_display_playerdata_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
+	return NSCOP.Utils.GetPlayersAutocomplete("nscop_playerdata_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
 end)
 
 concommand.Add("nscop_controls_" .. (SERVER and "sv" or "cl"), function(ply, cmd, args, argStr)
@@ -413,14 +420,13 @@ concommand.Add("nscop_controls_" .. (SERVER and "sv" or "cl"), function(ply, cmd
 	end
 
 	if not ply.NSCOP then
-		NSCOP.PrintDebug("Player has no NSCOP data")
-		return
+		NSCOP.Error("Could not display data, player has no NSCOP data")
 	end
 
 	NSCOP.Print("Player controls for: ", ply:GetName())
 	PrintTable(ply.NSCOP.Controls)
 end, function(cmd, argStr, args)
-	return NSCOP.Utils.GetPlayersAutocomplete("nscop_display_controls_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
+	return NSCOP.Utils.GetPlayersAutocomplete("nscop_controls_" .. (SERVER and "sv" or "cl"), cmd, argStr, args)
 end)
 
 --#endregion
