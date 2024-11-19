@@ -838,7 +838,7 @@ function SQL.UpdateExperience(characterId, experience)
 	SQL.EnableForeignKeys()
 
 	if characterId <= 0 then
-		NSCOP.PrintDebug("Character id is invalid: ", characterId)
+		NSCOP.Error("Character id is invalid: ", characterId)
 	end
 
 	local query = string.format([[
