@@ -8,6 +8,8 @@ NSCOP.Config.PathToConfigs = "nsc-configuration/"
 NSCOP.Config.Main = {}
 NSCOP.Config.Main.ModulesEnabled = {}
 
+NSCOP.Config.HUD = {}
+
 ---@alias NSCOP.ConfigKey "ModulesEnabled" | "AutosaveEnabled" | "AutosaveInterval"
 
 ---Returns if the module is enabled or not
@@ -26,4 +28,5 @@ end
 
 ---#region Including the Configs
 NSCOP.Config.IncludeConfig("main.lua")
+NSCOP.Config.IncludeConfig("hud.lua")
 ---#endregion

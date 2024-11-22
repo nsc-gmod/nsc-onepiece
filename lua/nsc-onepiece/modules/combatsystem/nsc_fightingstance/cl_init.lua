@@ -20,21 +20,20 @@ NSCOP.Utils.AddHook("CalcView", "NSCOP.FightingStance.ThirdPerson", function(ply
 	if not ply:NSCOP_IsUsingCombatSWEP() then return end
 	if camFov < 10 then return end
 
-	if camFov < 10 then return end
 	local frameTime = FrameTime()
 
 	camFov = defaultFov
 
 	---@type TraceResult?
-	local tr = util.TraceLine({
+	local trace = util.TraceLine({
 		start = pos,
 		endpos = pos - (angles:Forward() * camFov + angles:Right() * camOffset + angles:Up() * upOffset),
 		collisiongroup = COLLISION_GROUP_DEBRIS,
 	})
 
-	if not tr then return end
+	if not trace then return end
 
-	viewPos = LerpVector(camSmoothSpeed * frameTime, viewPos, tr.HitPos)
+	viewPos = LerpVector(camSmoothSpeed * frameTime, viewPos, trace.HitPos)
 	viewAngle = LerpAngle(camSmoothSpeed * frameTime, viewAngle, angles)
 
 	---@type CamData
@@ -48,7 +47,16 @@ NSCOP.Utils.AddHook("CalcView", "NSCOP.FightingStance.ThirdPerson", function(ply
 	return view
 end)
 
-local avatarBorder = Material("nsc-onepiece/hud/avatarBorder.vmt")
+local hudLeftPartX, hudLeftPartH = 20, 820
+
+local matNull = Material("null")
+
+local avatarBorderTopPiece = Material("nsc-onepiece/hud/avatarBorderPiece02.vmt")
+local avatarBorderBottomPiece = Material("nsc-onepiece/hud/avatarBorderPiece01.vmt")
+local borderDeco = Material("nsc-onepiece/hud/hudDecoration01")
+
+local barFrame01 = Material("nsc-onepiece/hud/barFrame01.vmt")
+local healthBar01 = Material("nsc-onepiece/hud/healthBar01.vmt")
 
 local skillRect = Material("nsc-onepiece/hud/skillRect.vmt")
 local skillRectActive = Material("nsc-onepiece/hud/skillRect_Active.vmt")
@@ -61,6 +69,7 @@ local screenScaleW = NSCOP.Utils.ScreenScaleW
 local screenScaleH = NSCOP.Utils.ScreenScaleH
 
 -- TODO: Optimize everything here in the future
+-- TODOOO: The fucking HUD is for some reason broken on resolutions lower than 2K. im frustrated
 
 function NSCOP.FightingStance:DrawHUD()
 	self:DrawPlayerHUD()
@@ -69,89 +78,121 @@ function NSCOP.FightingStance:DrawHUD()
 end
 
 function NSCOP.FightingStance:DrawPlayerHUD()
+	self:DrawAvatarBorderTopPiece()
 	self:DrawAvatar()
-	self:DrawAvatarBorder()
+	self:DrawAvatarBorderBottomPiece()
+	self:DrawBorderDecoration()
 	self:DrawBars()
+	self:DrawNickname()
+end
+
+function NSCOP.FightingStance:DrawNickname()
+	local nickX = screenScaleW(hudLeftPartX + 260, true)
+	local nickY = screenScaleH(hudLeftPartH - 8, true)
+
+	local nickname = string.sub( self:GetOwner():GetName(), 0, NSCOP.Config.HUD.NicknameCharacterLimit )
+
+	-- Rotates the text, so it appears tilted. Found it on some forum: https://www.unknowncheats.me/forum/garry-s-mod/383202-glua-draw-draw-simpletextoutlined-rotation.html
+	local mat = Matrix()
+
+	mat:Translate(Vector(NSCOP.Utils.ScreenW/2, NSCOP.Utils.ScreenH/2))
+	mat:Rotate(Angle(0,-5,0))
+	mat:Scale(Vector(1,1,1))
+	mat:Translate(-Vector(NSCOP.Utils.ScreenW/2, NSCOP.Utils.ScreenH/2))
+ 
+	cam.PushModelMatrix(mat)
+	draw.SimpleTextOutlined(nickname, "NSCOP_Main_Small", nickX, nickY, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, 2, Color(97, 89, 73))
+	cam.PopModelMatrix()	
+
+end
+
+local oldHp = 0
+
+function NSCOP.FightingStance:DrawHealthBar(x, y)
+	local owner = self:GetOwner()
+	--
+	render.ClearStencil()
+	render.SetStencilEnable(true)
+
+	render.SetStencilWriteMask(1)
+	render.SetStencilTestMask(1)
+
+	render.SetStencilFailOperation(STENCILOPERATION_KEEP)
+	render.SetStencilZFailOperation(STENCILOPERATION_KEEP)
+	render.SetStencilPassOperation(STENCILOPERATION_REPLACE)
+	render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_ALWAYS)
+	render.SetStencilReferenceValue(1)
+
+	local hp = owner:Health()
+    local maxHp = owner:GetMaxHealth()
+    if ( oldHp == 0 ) then
+        oldHp = hp
+    end
+
+	local maskWidth = screenScaleW(400)
+
+	local newHp = Lerp( FrameTime() * 10, oldHp, ( hp / maxHp ) * maskWidth )
+    oldHp = newHp
+
+	surface.SetMaterial(matNull) -- We need to use this, so the mask becomes transparent. I didn't find another solution
+	surface.DrawTexturedRect(x + 56, y, newHp, screenScaleH(100))
+	draw.NoTexture()
+
+	render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_EQUAL)
+
+	surface.SetDrawColor(255, 255, 255, 255)
+	surface.SetMaterial(healthBar01)
+	surface.DrawTexturedRect(x, y, screenScaleW(512), screenScaleH(128))
+
+	render.SetStencilEnable(false)
+	--
+
+	surface.SetDrawColor(255, 255, 255, 255)
+	surface.SetMaterial(barFrame01)
+	surface.DrawTexturedRect(x, y, screenScaleW(512), screenScaleH(128))
 end
 
 function NSCOP.FightingStance:DrawBars()
 	local ply = LocalPlayer()
 	if not IsValid(ply) then return end
 
-	local health = ply:Health()
-	local maxHealth = ply:GetMaxHealth()
-	local healthPercentage = math.Clamp(health / maxHealth, 0, 1)
+	local x, h = hudLeftPartX, hudLeftPartH
 
-	local barWidth = screenScaleW(300)
-	local barHeight = screenScaleH(25, true)
-	local barX = screenScaleW(160, true)
-	local barY = screenScaleH(940, true)
-
-	-- Draw background
-	draw.RoundedBox(8, barX, barY, barWidth, barHeight, Color(50, 50, 50, 200))
-	-- Draw health bar
-	draw.RoundedBox(8, barX, barY, barWidth * healthPercentage, barHeight, Color(192, 0, 59, 255))
-
-	-- Draw background
-	draw.RoundedBox(8, barX - 20, barY + 25, barWidth, barHeight, Color(50, 50, 50, 200))
-	-- Draw energy bar
-	draw.RoundedBox(8, barX - 20, barY + 25, barWidth * healthPercentage, barHeight, Color(183, 227, 249, 255))
-
-	-- Draw background
-	draw.RoundedBox(8, barX - 40, barY + 50, barWidth, barHeight, Color(50, 50, 50, 400))
-	-- Draw stamina bar
-	draw.RoundedBox(8, barX - 40, barY + 50, barWidth * healthPercentage, barHeight, Color(249, 211, 139, 255))
-
-	local xpBarX = screenScaleW(775, true)
-	local xpBarY = screenScaleH(990, true)
-	local xpBarWidth = screenScaleW(450)
-	local xpBarHeight = screenScaleH(30, true)
-	local experiencePercentage = math.Clamp(ply.NSCOP.PlayerData.CharacterData.Experience / 1000, 0, 1)
-
-	-- Draw background
-	draw.RoundedBox(8, xpBarX, xpBarY, xpBarWidth, xpBarHeight, Color(50, 50, 50, 400))
-	-- Draw experience bar
-	draw.RoundedBox(8, xpBarX, xpBarY, xpBarWidth * experiencePercentage, xpBarHeight, Color(208, 104, 160, 255))
-	--Draw xp text
-	draw.SimpleTextOutlined(
-		string.format("%d / %d", ply.NSCOP.PlayerData.CharacterData.Experience, 1000),
-		"NSCOP_Main_Small",
-		xpBarX + xpBarWidth / 2,
-		xpBarY + xpBarHeight / 2,
-		color_white,
-		TEXT_ALIGN_CENTER,
-		TEXT_ALIGN_CENTER,
-		2,
-		Color(0, 0, 0, 255))
-
-
-	-- -- Draw health text
-	-- draw.SimpleTextOutlined(
-	-- 	string.format("%d / %d", health, maxHealth),
-	-- 	"NSCOP_Main_Small",
-	-- 	barX + barWidth / 2,
-	-- 	barY + barHeight / 2,
-	-- 	color_white,
-	-- 	TEXT_ALIGN_CENTER,
-	-- 	TEXT_ALIGN_CENTER,
-	-- 	2,
-	-- 	Color(0, 0, 0, 200))
+	self:DrawHealthBar( screenScaleW(x + 87), screenScaleH(h + 20, true) )
 end
 
-function NSCOP.FightingStance:DrawAvatarBorder()
-	local avatarSize = screenScaleW(150)
-	local avatarX = screenScaleW(50, true)
-	local avatarY = screenScaleH(900, true)
+function NSCOP.FightingStance:DrawAvatarBorderBottomPiece()
+	local avatarSize = screenScaleW(256)
+	local avatarX = screenScaleW(hudLeftPartX, true)
+	local avatarY = screenScaleH(hudLeftPartH, true)
 
 	surface.SetDrawColor(255, 255, 255, 255)
-	surface.SetMaterial(avatarBorder)
+	surface.SetMaterial(avatarBorderBottomPiece)
 	surface.DrawTexturedRect(avatarX, avatarY, avatarSize, avatarSize)
-
-	local ply = LocalPlayer()
-	if not IsValid(ply) then return end
 end
 
-local avatarCamPos = Vector(35, 0, 30)
+function NSCOP.FightingStance:DrawAvatarBorderTopPiece()
+	local avatarSize = screenScaleW(256)
+	local avatarX = screenScaleW(hudLeftPartX, true)
+	local avatarY = screenScaleH(hudLeftPartH, true)
+
+	surface.SetDrawColor(255, 255, 255, 255)
+	surface.SetMaterial(avatarBorderTopPiece)
+	surface.DrawTexturedRect(avatarX, avatarY, avatarSize, avatarSize)
+end
+
+
+function NSCOP.FightingStance:DrawBorderDecoration()
+	local width, height = screenScaleW(512), screenScaleH(128)
+	local decoX = screenScaleW(hudLeftPartX + 115)
+	local decoY = screenScaleH(hudLeftPartH - 12, true)
+
+	surface.SetDrawColor(255, 255, 255, 255)
+	surface.SetMaterial(borderDeco)
+	surface.DrawTexturedRect(decoX, decoY, width, height)
+end
+
+local avatarCamPos = Vector(40, 0, 0)
 local avatarLookAt = Vector(0, 0, 40)
 function NSCOP.FightingStance:DrawAvatar()
 	local owner = self:GetOwner()
@@ -159,10 +200,10 @@ function NSCOP.FightingStance:DrawAvatar()
 	if not IsValid(owner) then return end
 	---@cast owner Player
 
-	local baseAvatarRadius = 150
-	local avatarRadius = screenScaleW(baseAvatarRadius / 2)
-	local avatarX = screenScaleW(50 + (baseAvatarRadius / 2), true)
-	local avatarY = screenScaleH(900 + (baseAvatarRadius / 2), true)
+	local baseAvatarRadius = 256
+	local avatarRadius = ScreenScale(baseAvatarRadius / 2)
+	local avatarX = screenScaleW(25 + (avatarRadius / 2), true)
+	local avatarY = screenScaleH(875 + (avatarRadius / 2), true)
 
 	draw.NoTexture()
 
@@ -172,8 +213,8 @@ function NSCOP.FightingStance:DrawAvatar()
 		self.PlayerAvatar:SetFOV(25)
 		self.PlayerAvatar:SetCamPos(avatarCamPos)
 		self.PlayerAvatar:SetLookAt(avatarLookAt)
-		self.PlayerAvatar:SetPos(avatarX - avatarRadius, avatarY - avatarRadius * 1.15)
-		self.PlayerAvatar:SetSize(avatarRadius * 2, avatarRadius * 2)
+		self.PlayerAvatar:SetPos(avatarX - avatarRadius, avatarY - avatarRadius * 4)
+		self.PlayerAvatar:SetSize(avatarRadius * 2, avatarRadius * 6)
 		self.PlayerAvatar:SetVisible(true)
 
 		function self.PlayerAvatar.Entity:GetPlayerColor() return owner:GetPlayerColor() end
@@ -227,10 +268,10 @@ function NSCOP.FightingStance:DrawAvatar()
 		render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_ALWAYS)
 		render.SetStencilReferenceValue(1)
 
-		surface.SetDrawColor(255, 255, 255, 1)
-		draw.NoTexture()
+		surface.SetMaterial(matNull) -- We need to use this, so the mask becomes transparent. I didn't find another solution
 		NSCOP.Utils.DrawCircle(avatarX, avatarY, avatarRadius, 30)
-		surface.DrawRect(50, 900 - avatarRadius * 4, avatarRadius * 2, avatarRadius * 5)
+		surface.DrawTexturedRect(avatarX / 2.5, avatarY - avatarRadius * 2, avatarRadius * 2, avatarRadius * 2)
+		draw.NoTexture()
 
 		render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_EQUAL)
 		surface.SetDrawColor(255, 255, 255, 255)

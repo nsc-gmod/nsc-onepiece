@@ -1,0 +1,5 @@
+"UnlitGeneric"
+{
+	"$basetexture" "nsc-onepiece/hud/avatarBorderPiece01"
+	"$translucent" 1
+}

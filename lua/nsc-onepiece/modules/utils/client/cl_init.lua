@@ -31,24 +31,26 @@ end
 ---Scales a value based on users screen width
 ---<br>REALM: CLIENT
 ---@param value number The value to scale
----@param scaleForHigherRes boolean | nil Should it also scale for resolutions higher than FullHD
+---@param scaleForHigherRes boolean? Should it also scale for resolutions higher than FullHD
 ---@nodiscard
 ---@return number The scaled value
 function Utils.ScreenScaleW(value, scaleForHigherRes)
 	---@type boolean
 	local isHigherRes = Utils.ScreenW > Utils.DefaultScreenW
+	print( (! isHigherRes or scaleForHigherRes) and value * Utils.ScreenW / Utils.DefaultScreenW or value )
 	return (! isHigherRes or scaleForHigherRes) and value * Utils.ScreenW / Utils.DefaultScreenW or value
 end
 
 ---Scales a value based on users screen height
 ---<br>REALM: CLIENT
 ---@param value number The value to scale
----@param scaleForHigherRes boolean Should it also scale for resolutions higher than FullHD
+---@param scaleForHigherRes boolean? Should it also scale for resolutions higher than FullHD
 ---@nodiscard
 ---@return number The scaled value
 function Utils.ScreenScaleH(value, scaleForHigherRes)
 	---@type boolean
 	local isHigherRes = Utils.ScreenH > Utils.DefaultScreenH
+	print( (! isHigherRes or scaleForHigherRes) and value * Utils.ScreenH / Utils.DefaultScreenH or value )
 	return (! isHigherRes or scaleForHigherRes) and value * Utils.ScreenH / Utils.DefaultScreenH or value
 end
 
