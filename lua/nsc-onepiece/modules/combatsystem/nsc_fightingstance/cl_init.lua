@@ -57,22 +57,6 @@ end)
 
 local hudLeftPartX, hudLeftPartH = 20, 820
 
-local matNull = Material("null")
-
-local avatarBorderTopPiece = Material("nsc-onepiece/hud/avatarBorderPiece02.vmt")
-local avatarBorderBottomPiece = Material("nsc-onepiece/hud/avatarBorderPiece01.vmt")
-local borderDeco = Material("nsc-onepiece/hud/hudDecoration01")
-
-local barFrame01 = Material("nsc-onepiece/hud/barFrame01.vmt")
-local healthBar01 = Material("nsc-onepiece/hud/healthBar01.vmt")
-
-local skillRect = Material("nsc-onepiece/hud/skillRect.vmt")
-local skillRectActive = Material("nsc-onepiece/hud/skillRect_Active.vmt")
-local skillRectCooldown = Material("nsc-onepiece/hud/skillRect_Cooldown.vmt")
-local skillRectActiveCooldown = Material("nsc-onepiece/hud/skillRect_Active_Cooldown.vmt")
-
-local buffBorder = Material("nsc-onepiece/hud/buffBorder.vmt")
-
 local screenScaleW = NSCOP.Utils.ScreenScaleW
 local screenScaleH = NSCOP.Utils.ScreenScaleH
 
@@ -83,74 +67,6 @@ function NSCOP.FightingStance:DrawHUD()
 	self:DrawPlayerData()
 
 	self:DrawSkills()
-end
-
----Draws the skills on the HUD
-function NSCOP.FightingStance:DrawSkills()
-	local selectedSkill = self:GetSelectedSkill()
-
-	for i = 1, 6, 1 do
-		local margin = 70
-		self:DrawSkill(screenScaleW(852.5, true) + screenScaleW((i - 1) * margin), screenScaleH(975, true), i, i == selectedSkill)
-	end
-end
-
----Draws a skill slot on the HUD
----<br>REALM: CLIENT
----@param x number
----@param y number
----@param skillIndex integer
----@param active boolean If the skill is active
-function NSCOP.FightingStance:DrawSkill(x, y, skillIndex, active)
-	local finalMat = skillRect
-	local skillSize = screenScaleW(64)
-
-	local finalX = x - skillSize
-	local finalY = y - skillSize
-
-	---@type integer
-	local skillId = self["GetSkillSlot" .. tostring(skillIndex)](self)
-	local skillInstance = self:GetSkillInstance(skillId)
-
-	if not skillInstance then return end
-
-	local skillCooldown = skillInstance:GetSkillTime()
-
-	if skillCooldown > 0 then
-		local cooldown = skillCooldown
-		local cooldownPercentage = math.Clamp(cooldown / skillInstance.SkillCD, 0, 1)
-
-		draw.NoTexture()
-		surface.SetDrawColor(0, 0, 0, 200)
-
-		local cooldownMat = skillRectCooldown
-
-		if active then
-			cooldownMat = skillRectActiveCooldown
-		end
-
-		surface.SetMaterial(cooldownMat)
-		local cooldownSize = skillSize * cooldownPercentage
-		local cooldownX = finalX + (skillSize - cooldownSize) / 2
-		local cooldownY = finalY + (skillSize - cooldownSize) / 2
-		surface.DrawTexturedRect(cooldownX, cooldownY, cooldownSize, cooldownSize)
-		-- NSCOP.Utils.DrawCircle(x - (skillSize / 2), y - (skillSize / 2), (skillSize / 2.5) * cooldownPercentage, 32)
-	end
-
-	if active then
-		finalMat = skillRectActive
-	end
-	surface.SetMaterial(finalMat)
-	surface.SetDrawColor(255, 255, 255, 255)
-	surface.DrawTexturedRect(finalX, finalY, skillSize, skillSize)
-
-	local skillButton = self:GetSkillButton(skillIndex)
-
-	if not skillButton then return end
-	---@cast skillButton integer
-
-	local keyName = input.GetKeyName(skillButton)
-	draw.SimpleTextOutlined(keyName, "NSCOP_Main", x - skillSize / 2, y - skillSize / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(97, 89, 73))
 end
 
 ---@type {[NSCOP.HUDBaseElement]: boolean}

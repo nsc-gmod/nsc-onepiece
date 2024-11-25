@@ -2,6 +2,7 @@
 
 local outlineColor = Color(97, 89, 73)
 local hudLeftPartX, hudLeftPartH
+local hudRightPartX, hudRightPartH
 
 local matNull = Material("null")
 
@@ -17,6 +18,12 @@ local manaBar01 = Material("nsc-onepiece/hud/manaBar01.vmt")
 local hungerBar01 = Material("nsc-onepiece/hud/hungerBar01.vmt")
 
 local f2, f4, f6 = Material("nsc-onepiece/hud/btn_F2.vmt"), Material("nsc-onepiece/hud/btn_F4.vmt"), Material("nsc-onepiece/hud/btn_F6.vmt")
+local f7, f9 = Material("nsc-onepiece/hud/btn_F7.vmt"), Material("nsc-onepiece/hud/btn_F9.vmt")
+
+local xpFrame01 = Material("nsc-onepiece/hud/xpFrame01.vmt")
+local xpBar01 = Material("nsc-onepiece/hud/xpBar01.vmt")
+
+local arrow = Material("gui/point.png")
 
 local skillRect = Material("nsc-onepiece/hud/skillRect.vmt")
 local skillRectActive = Material("nsc-onepiece/hud/skillRect_Active.vmt")
@@ -29,8 +36,10 @@ local screenScaleW = NSCOP.Utils.ScreenScaleW
 local screenScaleH = NSCOP.Utils.ScreenScaleH
 
 function NSCOP.FightingStance:DrawPlayerData()
-    hudLeftPartX = 20
-    hudLeftPartH = ScrH() - 270
+    hudLeftPartX = screenScaleW(20)
+    hudLeftPartH = ScrH() - screenScaleH(270)
+    hudRightPartX = ScrW() - screenScaleW(20)
+    hudRightPartH = ScrH() - screenScaleH(270)
 
     self:DrawAvatarBorderTopPiece()
 	self:DrawAvatar()
@@ -39,6 +48,8 @@ function NSCOP.FightingStance:DrawPlayerData()
 	self:DrawBars()
 	self:DrawNickname()
     self:DrawHelperButtons()
+
+    self:DrawExperienceBar()
 end
 
 ---#region Bars
@@ -47,11 +58,11 @@ function NSCOP.FightingStance:DrawBars()
 	local ply = LocalPlayer()
 	if not IsValid(ply) then return end
 
-	local x, h = hudLeftPartX, hudLeftPartH
+	local x, y = hudLeftPartX, hudLeftPartH
 
-	self:DrawHealthBar( screenScaleW(hudLeftPartX + 110), h + screenScaleH(20) )
-    self:DrawManaBar( screenScaleW(hudLeftPartX + 90), h + screenScaleH(59) )
-    self:DrawHungerBar( screenScaleW(hudLeftPartX + 70), h + screenScaleH(98) )
+	self:DrawHealthBar( screenScaleW(hudLeftPartX + 110), y + screenScaleH(20) )
+    self:DrawManaBar( screenScaleW(hudLeftPartX + 90), y + screenScaleH(59) )
+    self:DrawHungerBar( screenScaleW(hudLeftPartX + 70), y + screenScaleH(98) )
 end
 
 function NSCOP.FightingStance:DrawNickname()
@@ -354,6 +365,8 @@ function NSCOP.FightingStance:DrawHelperButtons()
 	local f2helperX, f2helperY = screenScaleW(hudLeftPartX + 210), hudLeftPartH + screenScaleH(188)
     local f4helperX, f4helperY = screenScaleW(hudLeftPartX + 335), hudLeftPartH + screenScaleH(180)
     local f6helperX, f6helperY = screenScaleW(hudLeftPartX + 455), hudLeftPartH + screenScaleH(172.5)
+    local f7helperX, f7helperY = hudRightPartX - screenScaleW(70), hudLeftPartH + screenScaleH(152.5)
+    local f9helperX, f9helperY = hudRightPartX - screenScaleW(70), hudLeftPartH + screenScaleH(192.5)
 
     -- Draw the icons
     local iconW, iconH = screenScaleW(32), screenScaleH(32)
@@ -370,6 +383,14 @@ function NSCOP.FightingStance:DrawHelperButtons()
     surface.SetDrawColor(255, 255, 255, 255)
 	surface.SetMaterial(f6)
 	surface.DrawTexturedRect(f6helperX, f6helperY, iconW, iconH)
+    --F7
+    surface.SetDrawColor(255, 255, 255, 255)
+	surface.SetMaterial(f7)
+	surface.DrawTexturedRect(f7helperX, f7helperY, iconW, iconH)
+    --F9
+    surface.SetDrawColor(255, 255, 255, 255)
+	surface.SetMaterial(f9)
+	surface.DrawTexturedRect(f9helperX, f9helperY, iconW, iconH)
 
     -- Draw the text
     local tilt = -3
@@ -380,6 +401,146 @@ function NSCOP.FightingStance:DrawHelperButtons()
     NSCOP.Utils.DrawRotatedText("Capacités", "NSCOP_Main_VerySmall", f4helperX, f4helperY + screenScaleH(-3), color_white, tilt, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, outlineColor)
     --F6 Text
     NSCOP.Utils.DrawRotatedText("Carte", "NSCOP_Main_VerySmall", f6helperX + screenScaleW(16), f6helperY + screenScaleH(-3), color_white, tilt, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, outlineColor)
+    --F7 Text
+    draw.SimpleTextOutlined("Dials", "NSCOP_Main_VerySmall", f7helperX - screenScaleW(8), f7helperY + screenScaleH(14), color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER, 2, outlineColor)
+    --F9 Text
+    draw.SimpleTextOutlined("Ce présenter", "NSCOP_Main_Smaller", f9helperX - screenScaleW(8), f9helperY + screenScaleH(14), color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER, 2, outlineColor)
 end
 
 ---#endregion
+
+---#region Experience Bar
+
+local oldXp = 0
+
+function NSCOP.FightingStance:DrawExperienceBar()
+    local owner = self:GetOwner()
+	--
+
+    local w, h = screenScaleW(512), screenScaleH(64)
+    local x, y = (ScrW() - w) / 2, hudLeftPartH + screenScaleH(140)
+
+    surface.SetDrawColor(0, 0, 0, 200)
+	surface.SetMaterial(xpBar01)
+	surface.DrawTexturedRect(x, y, w, h)
+
+	render.ClearStencil()
+	render.SetStencilEnable(true)
+
+	render.SetStencilWriteMask(1)
+	render.SetStencilTestMask(1)
+
+	render.SetStencilFailOperation(STENCILOPERATION_KEEP)
+	render.SetStencilZFailOperation(STENCILOPERATION_KEEP)
+	render.SetStencilPassOperation(STENCILOPERATION_REPLACE)
+	render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_ALWAYS)
+	render.SetStencilReferenceValue(1)
+
+	local hp = owner:Health()
+    local maxHp = owner:GetMaxHealth()
+    if ( oldXp == 0 ) then
+        oldXp = hp
+    end
+
+	local maskWidth = screenScaleW(512)
+
+	local newHp = Lerp( FrameTime() * 10, oldXp, ( hp / maxHp ) * maskWidth )
+    oldXp = newHp
+
+    draw.NoTexture()
+	surface.SetMaterial(matNull) -- We need to use this, so the mask becomes transparent. I didn't find another solution
+	surface.DrawTexturedRect(x, y, math.Clamp( newHp, 24, maskWidth ), h)
+	draw.NoTexture()
+
+	render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_EQUAL)
+
+	surface.SetDrawColor(255, 255, 255, 255)
+	surface.SetMaterial(xpBar01)
+	surface.DrawTexturedRect(x, y, w, h)
+
+	render.SetStencilEnable(false)
+	--
+
+	surface.SetDrawColor(255, 255, 255, 255)
+	surface.SetMaterial(xpFrame01)
+	surface.DrawTexturedRect(x, y, w, h)
+
+    --
+    draw.SimpleTextOutlined(tostring(hp) .. "/" .. tostring(maxHp), "NSCOP_Main_VerySmallSmaller", ScrW()/2, y + h / 2.2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, outlineColor)
+
+    --
+    draw.SimpleTextOutlined("Level: ".. tostring(maxHp), "NSCOP_Main_Smaller", ScrW()/2, y + (h * 1.05), color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, outlineColor)
+end
+
+---Draws the skills on the HUD
+function NSCOP.FightingStance:DrawSkills()
+	local selectedSkill = self:GetSelectedSkill()
+
+    local center = ScrW()/2
+	for i = 1, 6, 1 do
+		local margin = 70
+		self:DrawSkill((center - (margin * 2) ) + screenScaleW((i - 1) * margin), hudLeftPartH + screenScaleH(140), i, i == selectedSkill)
+	end
+end
+
+---Draws a skill slot on the HUD
+---<br>REALM: CLIENT
+---@param x number
+---@param y number
+---@param skillIndex integer
+---@param active boolean If the skill is active
+function NSCOP.FightingStance:DrawSkill(x, y, skillIndex, active)
+	local finalMat = skillRect
+	local skillSize = !active and screenScaleW(64) or screenScaleW(128)
+
+	local finalX = x - (!active and skillSize or screenScaleW(96))
+	local finalY = y - (!active and skillSize or screenScaleW(96))
+
+	---@type integer
+	local skillId = self["GetSkillSlot" .. tostring(skillIndex)](self)
+	local skillInstance = self:GetSkillInstance(skillId)
+
+	if not skillInstance then return end
+
+	local skillCooldown = skillInstance:GetSkillTime()
+
+	if skillCooldown > 0 then
+		local cooldown = skillCooldown
+		local cooldownPercentage = math.Clamp(cooldown / skillInstance.SkillCD, 0, 1)
+
+		draw.NoTexture()
+		surface.SetDrawColor(0, 0, 0, 200)
+
+		local cooldownMat = skillRectCooldown
+
+		if active then
+			cooldownMat = skillRectActiveCooldown
+		end
+
+		surface.SetMaterial(cooldownMat)
+		local cooldownSize = !active and skillSize * cooldownPercentage or screenScaleW(70) * cooldownPercentage
+		local cooldownX = finalX + (skillSize - cooldownSize) / 2
+		local cooldownY = finalY + (skillSize - cooldownSize) / 2
+		surface.DrawTexturedRect(cooldownX, cooldownY, cooldownSize, cooldownSize)
+		-- NSCOP.Utils.DrawCircle(x - (skillSize / 2), y - (skillSize / 2), (skillSize / 2.5) * cooldownPercentage, 32)
+	end
+
+	if active then
+        surface.SetMaterial(arrow)
+        surface.SetDrawColor(255, 255, 255, 128)
+		surface.DrawTexturedRect(finalX + screenScaleW(56), finalY + screenScaleH(8), screenScaleW(16), screenScaleH(8))
+
+		finalMat = skillRectActive
+	end
+	surface.SetMaterial(finalMat)
+	surface.SetDrawColor(255, 255, 255, 255)
+	surface.DrawTexturedRect(finalX, finalY, skillSize, skillSize)
+
+	local skillButton = self:GetSkillButton(skillIndex)
+
+	if not skillButton then return end
+	---@cast skillButton integer
+
+	-- local keyName = input.GetKeyName(skillButton)
+	-- draw.SimpleTextOutlined(keyName, "NSCOP_Main", x - skillSize / 2, y - skillSize / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(97, 89, 73))
+end
