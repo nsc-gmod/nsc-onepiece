@@ -1,5 +1,13 @@
 ---@class NSCOP.FightingStance: SWEP
 
+function NSCOP.FightingStance:Think()
+	local owner = self:GetOwner()
+
+	if ! self.InitialSkillSetupDone then
+		self:InitialSkillSetup()
+	end
+end
+
 local defaultCamSmoothSpeed = 35
 local defaultFov = 80
 local defaultCamOffset = -10
@@ -72,214 +80,9 @@ local screenScaleH = NSCOP.Utils.ScreenScaleH
 -- TODOOO: The fucking HUD is for some reason broken on resolutions lower than 2K. im frustrated
 
 function NSCOP.FightingStance:DrawHUD()
-	self:DrawPlayerHUD()
+	self:DrawPlayerData()
 
 	self:DrawSkills()
-end
-
-function NSCOP.FightingStance:DrawPlayerHUD()
-	self:DrawAvatarBorderTopPiece()
-	self:DrawAvatar()
-	self:DrawAvatarBorderBottomPiece()
-	self:DrawBorderDecoration()
-	self:DrawBars()
-	self:DrawNickname()
-end
-
-function NSCOP.FightingStance:DrawNickname()
-	local nickX = screenScaleW(hudLeftPartX + 260, true)
-	local nickY = screenScaleH(hudLeftPartH - 8, true)
-
-	local nickname = string.sub( self:GetOwner():GetName(), 0, NSCOP.Config.HUD.NicknameCharacterLimit )
-
-	-- Rotates the text, so it appears tilted. Found it on some forum: https://www.unknowncheats.me/forum/garry-s-mod/383202-glua-draw-draw-simpletextoutlined-rotation.html
-	local mat = Matrix()
-
-	mat:Translate(Vector(NSCOP.Utils.ScreenW/2, NSCOP.Utils.ScreenH/2))
-	mat:Rotate(Angle(0,-5,0))
-	mat:Scale(Vector(1,1,1))
-	mat:Translate(-Vector(NSCOP.Utils.ScreenW/2, NSCOP.Utils.ScreenH/2))
- 
-	cam.PushModelMatrix(mat)
-	draw.SimpleTextOutlined(nickname, "NSCOP_Main_Small", nickX, nickY, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, 2, Color(97, 89, 73))
-	cam.PopModelMatrix()	
-
-end
-
-local oldHp = 0
-
-function NSCOP.FightingStance:DrawHealthBar(x, y)
-	local owner = self:GetOwner()
-	--
-	render.ClearStencil()
-	render.SetStencilEnable(true)
-
-	render.SetStencilWriteMask(1)
-	render.SetStencilTestMask(1)
-
-	render.SetStencilFailOperation(STENCILOPERATION_KEEP)
-	render.SetStencilZFailOperation(STENCILOPERATION_KEEP)
-	render.SetStencilPassOperation(STENCILOPERATION_REPLACE)
-	render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_ALWAYS)
-	render.SetStencilReferenceValue(1)
-
-	local hp = owner:Health()
-    local maxHp = owner:GetMaxHealth()
-    if ( oldHp == 0 ) then
-        oldHp = hp
-    end
-
-	local maskWidth = screenScaleW(400)
-
-	local newHp = Lerp( FrameTime() * 10, oldHp, ( hp / maxHp ) * maskWidth )
-    oldHp = newHp
-
-	surface.SetMaterial(matNull) -- We need to use this, so the mask becomes transparent. I didn't find another solution
-	surface.DrawTexturedRect(x + 56, y, newHp, screenScaleH(100))
-	draw.NoTexture()
-
-	render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_EQUAL)
-
-	surface.SetDrawColor(255, 255, 255, 255)
-	surface.SetMaterial(healthBar01)
-	surface.DrawTexturedRect(x, y, screenScaleW(512), screenScaleH(128))
-
-	render.SetStencilEnable(false)
-	--
-
-	surface.SetDrawColor(255, 255, 255, 255)
-	surface.SetMaterial(barFrame01)
-	surface.DrawTexturedRect(x, y, screenScaleW(512), screenScaleH(128))
-end
-
-function NSCOP.FightingStance:DrawBars()
-	local ply = LocalPlayer()
-	if not IsValid(ply) then return end
-
-	local x, h = hudLeftPartX, hudLeftPartH
-
-	self:DrawHealthBar( screenScaleW(x + 87), screenScaleH(h + 20, true) )
-end
-
-function NSCOP.FightingStance:DrawAvatarBorderBottomPiece()
-	local avatarSize = screenScaleW(256)
-	local avatarX = screenScaleW(hudLeftPartX, true)
-	local avatarY = screenScaleH(hudLeftPartH, true)
-
-	surface.SetDrawColor(255, 255, 255, 255)
-	surface.SetMaterial(avatarBorderBottomPiece)
-	surface.DrawTexturedRect(avatarX, avatarY, avatarSize, avatarSize)
-end
-
-function NSCOP.FightingStance:DrawAvatarBorderTopPiece()
-	local avatarSize = screenScaleW(256)
-	local avatarX = screenScaleW(hudLeftPartX, true)
-	local avatarY = screenScaleH(hudLeftPartH, true)
-
-	surface.SetDrawColor(255, 255, 255, 255)
-	surface.SetMaterial(avatarBorderTopPiece)
-	surface.DrawTexturedRect(avatarX, avatarY, avatarSize, avatarSize)
-end
-
-
-function NSCOP.FightingStance:DrawBorderDecoration()
-	local width, height = screenScaleW(512), screenScaleH(128)
-	local decoX = screenScaleW(hudLeftPartX + 115)
-	local decoY = screenScaleH(hudLeftPartH - 12, true)
-
-	surface.SetDrawColor(255, 255, 255, 255)
-	surface.SetMaterial(borderDeco)
-	surface.DrawTexturedRect(decoX, decoY, width, height)
-end
-
-local avatarCamPos = Vector(40, 0, 0)
-local avatarLookAt = Vector(0, 0, 40)
-function NSCOP.FightingStance:DrawAvatar()
-	local owner = self:GetOwner()
-
-	if not IsValid(owner) then return end
-	---@cast owner Player
-
-	local baseAvatarRadius = 256
-	local avatarRadius = ScreenScale(baseAvatarRadius / 2)
-	local avatarX = screenScaleW(25 + (avatarRadius / 2), true)
-	local avatarY = screenScaleH(875 + (avatarRadius / 2), true)
-
-	draw.NoTexture()
-
-	if ! IsValid(self.PlayerAvatar) then
-		self.PlayerAvatar = vgui.Create("DModelPanel")
-		self.PlayerAvatar:SetModel(owner:GetModel())
-		self.PlayerAvatar:SetFOV(25)
-		self.PlayerAvatar:SetCamPos(avatarCamPos)
-		self.PlayerAvatar:SetLookAt(avatarLookAt)
-		self.PlayerAvatar:SetPos(avatarX - avatarRadius, avatarY - avatarRadius * 4)
-		self.PlayerAvatar:SetSize(avatarRadius * 2, avatarRadius * 6)
-		self.PlayerAvatar:SetVisible(true)
-
-		function self.PlayerAvatar.Entity:GetPlayerColor() return owner:GetPlayerColor() end
-
-		function self.PlayerAvatar.Entity:GetSkin() return owner:GetSkin() end
-
-		self.PlayerAvatar.Think = function()
-			if ! IsValid(self) then
-				self.PlayerAvatar:Remove()
-				return
-			end
-
-			self.PlayerAvatar:SetModel(owner:GetModel())
-			local PlayerModelBGroup = ""
-			local PlayerModelSkin = owner:GetSkin() or 0
-
-			for n = 0, owner:GetNumBodyGroups() do
-				PlayerModelBGroup = PlayerModelBGroup .. owner:GetBodygroup(n)
-			end
-
-			local ent = self.PlayerAvatar.Entity
-			ent:SetBodyGroups(PlayerModelBGroup)
-			ent:SetSkin(PlayerModelSkin)
-		end
-
-		self.PlayerAvatar.LayoutEntity = function(ent)
-			local layoutEnt = self.PlayerAvatar:GetEntity()
-			if IsValid(layoutEnt) and layoutEnt.LookupBone and layoutEnt:LookupBone("ValveBiped.Bip01_Head1") and layoutEnt:LookupBone("ValveBiped.Bip01_Head1") != -1 then
-				local headPos = math.Round(layoutEnt:GetBonePosition(layoutEnt:LookupBone("ValveBiped.Bip01_Head1")).z) + 2
-				if avatarCamPos.z != headPos then
-					avatarCamPos.z = headPos
-					avatarLookAt.z = headPos
-				end
-				self.PlayerAvatar:SetCamPos(avatarCamPos)
-				self.PlayerAvatar:SetLookAt(avatarLookAt)
-			end
-
-			return
-		end
-		self.PlayerAvatar:SetPaintedManually(true)
-	else
-		render.ClearStencil()
-		render.SetStencilEnable(true)
-
-		render.SetStencilWriteMask(1)
-		render.SetStencilTestMask(1)
-
-		render.SetStencilFailOperation(STENCILOPERATION_KEEP)
-		render.SetStencilZFailOperation(STENCILOPERATION_KEEP)
-		render.SetStencilPassOperation(STENCILOPERATION_REPLACE)
-		render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_ALWAYS)
-		render.SetStencilReferenceValue(1)
-
-		surface.SetMaterial(matNull) -- We need to use this, so the mask becomes transparent. I didn't find another solution
-		NSCOP.Utils.DrawCircle(avatarX, avatarY, avatarRadius, 30)
-		surface.DrawTexturedRect(avatarX / 2.5, avatarY - avatarRadius * 2, avatarRadius * 2, avatarRadius * 2)
-		draw.NoTexture()
-
-		render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_EQUAL)
-		surface.SetDrawColor(255, 255, 255, 255)
-		self.PlayerAvatar:SetPaintedManually(false)
-		self.PlayerAvatar:PaintManual()
-		self.PlayerAvatar:SetPaintedManually(true)
-		render.SetStencilEnable(false)
-	end
 end
 
 ---Draws the skills on the HUD
@@ -347,7 +150,7 @@ function NSCOP.FightingStance:DrawSkill(x, y, skillIndex, active)
 	---@cast skillButton integer
 
 	local keyName = input.GetKeyName(skillButton)
-	draw.SimpleTextOutlined(keyName, "NSCOP_Main", x - skillSize / 2, y - skillSize / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, Color(97, 89, 73))
+	draw.SimpleTextOutlined(keyName, "NSCOP_Main", x - skillSize / 2, y - skillSize / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(97, 89, 73))
 end
 
 ---@type {[NSCOP.HUDBaseElement]: boolean}

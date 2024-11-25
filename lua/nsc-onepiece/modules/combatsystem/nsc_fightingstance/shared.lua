@@ -177,14 +177,6 @@ function NSCOP.FightingStance:Reload()
 	self:SetCombatStance(not self:GetCombatStance())
 end
 
-function NSCOP.FightingStance:Think()
-	local owner = self:GetOwner()
-
-	if ! self.InitialSkillSetupDone then
-		self:InitialSkillSetup()
-	end
-end
-
 ---@param aerial? boolean If the dodge is aerial, if so, then the player will dodge upwards
 function NSCOP.FightingStance:Dodge(aerial)
 	if CurTime() < self:GetNextDodge() then return end
@@ -306,5 +298,6 @@ end
 -- Before we add the weapon, we load the client and server files for them to change the properties
 NSCOP.IncludeServer("sv_init.lua")
 NSCOP.IncludeClient("cl_init.lua")
+NSCOP.IncludeClient("hud/playerdata.lua")
 
 weapons.Register(NSCOP.FightingStance, "nsc_fightingstance")

@@ -1,11 +1,16 @@
 ---@alias NSCOP.Font "NSCOP_Main" | "NSCOP_Main_Big" | "NSCOP_Main_Small" | "NSCOP_Main_VerySmall"
 
+NSCOP.Utils.AddHook("OnScreenSizeChanged", "NSCOP.Utils.SyncScreenSize", function(oldWidth, oldHeight, newWidth, newHeight)
+	include()
+end)
+
+
 local isLinux = system.IsLinux()
 
 surface.CreateFont("NSCOP_Main", {
 	font = isLinux and "fantaisie_artistique.ttf" or "FantaisieArtistique",
 	extended = false,
-	size = ScreenScale(12),
+	size = NSCOP.Utils.ScreenScaleW(43),
 	weight = 500,
 	blursize = 0,
 	scanlines = 0,
@@ -23,7 +28,7 @@ surface.CreateFont("NSCOP_Main", {
 surface.CreateFont("NSCOP_Main_Big", {
 	font = isLinux and "fantaisie_artistique.ttf" or "FantaisieArtistique",
 	extended = false,
-	size = ScreenScale(16),
+	size = NSCOP.Utils.ScreenScaleW(58),
 	weight = 500,
 	blursize = 0,
 	scanlines = 0,
@@ -41,7 +46,7 @@ surface.CreateFont("NSCOP_Main_Big", {
 surface.CreateFont("NSCOP_Main_Small", {
 	font = isLinux and "fantaisie_artistique.ttf" or "FantaisieArtistique",
 	extended = false,
-	size = ScreenScale(8),
+	size = NSCOP.Utils.ScreenScaleW(29),
 	weight = 500,
 	blursize = 0,
 	scanlines = 0,
@@ -59,7 +64,7 @@ surface.CreateFont("NSCOP_Main_Small", {
 surface.CreateFont("NSCOP_Main_VerySmall", {
 	font = isLinux and "fantaisie_artistique.ttf" or "FantaisieArtistique",
 	extended = false,
-	size = ScreenScale(4),
+	size = NSCOP.Utils.ScreenScaleW(18),
 	weight = 500,
 	blursize = 0,
 	scanlines = 0,

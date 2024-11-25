@@ -1,2 +1,9 @@
 ---@class NSCOP.FightingStance: SWEP
-local FightingStance = {}
+
+function NSCOP.FightingStance:Think()
+	local owner = self:GetOwner()
+
+	if ! self.InitialSkillSetupDone then
+		self:InitialSkillSetup()
+	end
+end

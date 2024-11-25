@@ -37,7 +37,6 @@ end
 function Utils.ScreenScaleW(value, scaleForHigherRes)
 	---@type boolean
 	local isHigherRes = Utils.ScreenW > Utils.DefaultScreenW
-	print( (! isHigherRes or scaleForHigherRes) and value * Utils.ScreenW / Utils.DefaultScreenW or value )
 	return (! isHigherRes or scaleForHigherRes) and value * Utils.ScreenW / Utils.DefaultScreenW or value
 end
 
@@ -50,8 +49,30 @@ end
 function Utils.ScreenScaleH(value, scaleForHigherRes)
 	---@type boolean
 	local isHigherRes = Utils.ScreenH > Utils.DefaultScreenH
-	print( (! isHigherRes or scaleForHigherRes) and value * Utils.ScreenH / Utils.DefaultScreenH or value )
 	return (! isHigherRes or scaleForHigherRes) and value * Utils.ScreenH / Utils.DefaultScreenH or value
+end
+
+local vector_one = Vector( 1, 1, 1 )
+function Utils.DrawRotatedText(text, font, x, y, color, ang, xAlign, yAlign, outlineWidth, outlineColor, scale )
+	render.PushFilterMag( TEXFILTER.ANISOTROPIC )
+	render.PushFilterMin( TEXFILTER.ANISOTROPIC )
+
+	local m = Matrix()
+	m:Translate( Vector( x, y, 0 ) )
+	m:Rotate( Angle( 0, ang, 0 ) )
+	m:Scale( vector_one * ( scale or 1 ) )
+
+	surface.SetFont( font )
+	local w, h = surface.GetTextSize( text )
+
+	m:Translate( Vector( 0, 0, 0 ) )
+
+	cam.PushModelMatrix( m, true ) 			-- Have to add the width and height, otherwise the text doesn't draw properly. Haven't found another workaround yet 		
+		draw.SimpleTextOutlined( text, font, 0 + w, 0 + h, color, xAlign, yAlign, outlineWidth, outlineColor )
+	cam.PopModelMatrix()
+
+	render.PopFilterMag()
+	render.PopFilterMin()
 end
 
 Utils.AddHook("OnScreenSizeChanged", "NSCOP.Utils.SyncScreenSize", function(oldWidth, oldHeight, newWidth, newHeight)
