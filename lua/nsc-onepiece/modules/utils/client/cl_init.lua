@@ -37,7 +37,7 @@ end
 function Utils.ScreenScaleW(value, scaleForHigherRes)
 	---@type boolean
 	local isHigherRes = Utils.ScreenW > Utils.DefaultScreenW
-	return (! isHigherRes or scaleForHigherRes) and value * Utils.ScreenW / Utils.DefaultScreenW or value
+	return (! isHigherRes or scaleForHigherRes) and value * ScrW() / Utils.DefaultScreenW or value
 end
 
 ---Scales a value based on users screen height
@@ -49,7 +49,7 @@ end
 function Utils.ScreenScaleH(value, scaleForHigherRes)
 	---@type boolean
 	local isHigherRes = Utils.ScreenH > Utils.DefaultScreenH
-	return (! isHigherRes or scaleForHigherRes) and value * Utils.ScreenH / Utils.DefaultScreenH or value
+	return (! isHigherRes or scaleForHigherRes) and value * ScrH() / Utils.DefaultScreenH or value
 end
 
 local vector_one = Vector( 1, 1, 1 )

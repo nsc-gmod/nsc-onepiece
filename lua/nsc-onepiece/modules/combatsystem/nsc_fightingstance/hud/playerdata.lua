@@ -478,8 +478,8 @@ function NSCOP.FightingStance:DrawSkills()
 
     local center = ScrW()/2
 	for i = 1, 6, 1 do
-		local margin = 70
-		self:DrawSkill((center - (margin * 2) ) + screenScaleW((i - 1) * margin), hudLeftPartH + screenScaleH(140), i, i == selectedSkill)
+		local margin = screenScaleW(70)
+		self:DrawSkill( ( center - margin * 3 ) + ( margin * i ), hudLeftPartH + screenScaleH(140), i, i == selectedSkill)
 	end
 end
 
