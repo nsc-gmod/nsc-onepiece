@@ -6,8 +6,6 @@ NSCOP.Utils.AddHook("OnScreenSizeChanged", "NSCOP.Utils.UpdateFonts", function(o
     NSCOP.LoadFonts()
 end)
 
-NSCOP.LoadFonts()
-
 ---Loads all the fonts
 function NSCOP.LoadFonts()
 	surface.CreateFont("NSCOP_Main", {
@@ -119,3 +117,5 @@ function NSCOP.LoadFonts()
 		outline = false,
 	})
 end
+
+NSCOP.LoadFonts()

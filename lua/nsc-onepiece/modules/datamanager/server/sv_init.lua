@@ -203,6 +203,8 @@ NSCOP.Utils.AddHook("Tick", "NSCOP.DataManager.Autosave", function()
 	if not DataManager.AutosaveEnabled then return end
 	if CurTime() < DataManager.NextAutoSave then return end
 
+	DataManager.NextAutoSave = CurTime() + DataManager.AutosaveInterval
+
 	for _, ply in player.Iterator() do
 		---@cast ply Player
 		if not ply:IsValid() then continue end
@@ -211,7 +213,6 @@ NSCOP.Utils.AddHook("Tick", "NSCOP.DataManager.Autosave", function()
 	end
 
 	NSCOP.PrintDebug("Autosaved all player data")
-	DataManager.NextAutoSave = CurTime() + DataManager.AutosaveInterval
 end)
 
 --#region NetReceiving

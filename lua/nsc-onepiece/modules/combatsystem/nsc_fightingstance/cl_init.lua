@@ -55,16 +55,96 @@ NSCOP.Utils.AddHook("CalcView", "NSCOP.FightingStance.ThirdPerson", function(ply
 	return view
 end)
 
-local hudLeftPartX, hudLeftPartH = 20, 820
+local hudLeftPartX, hudLeftPartH
+local hudRightPartX, hudRightPartH
 
 local screenScaleW = NSCOP.Utils.ScreenScaleW
 local screenScaleH = NSCOP.Utils.ScreenScaleH
 
--- TODO: Optimize everything here in the future
--- TODOOO: The fucking HUD is for some reason broken on resolutions lower than 2K. im frustrated
+local arrow = Material("gui/point.png")
+local skillRect = Material("nsc-onepiece/hud/skillRect.vmt")
+local skillRectActive = Material("nsc-onepiece/hud/skillRect_Active.vmt")
+local skillRectCooldown = Material("nsc-onepiece/hud/skillRect_Cooldown.vmt")
+local skillRectActiveCooldown = Material("nsc-onepiece/hud/skillRect_Active_Cooldown.vmt")
+
+---Draws the skills on the HUD
+function NSCOP.FightingStance:DrawSkills()
+	local selectedSkill = self:GetSelectedSkill()
+
+    local center = ScrW()/2
+	for i = 1, 6, 1 do
+		local margin = screenScaleW(70)
+		self:DrawSkill( ( center - margin * 3 ) + ( margin * i ), hudLeftPartH + screenScaleH(140), i, i == selectedSkill)
+	end
+end
+
+---Draws a skill slot on the HUD
+---<br>REALM: CLIENT
+---@param x number
+---@param y number
+---@param skillIndex integer
+---@param active boolean If the skill is active
+function NSCOP.FightingStance:DrawSkill(x, y, skillIndex, active)
+	local finalMat = skillRect
+	local skillSize = !active and screenScaleW(64) or screenScaleW(128)
+
+	local finalX = x - (!active and skillSize or screenScaleW(96))
+	local finalY = y - (!active and skillSize or screenScaleW(96))
+
+	---@type integer
+	local skillId = self["GetSkillSlot" .. tostring(skillIndex)](self)
+	local skillInstance = self:GetSkillInstance(skillId)
+
+	if not skillInstance then return end
+
+	local skillCooldown = skillInstance:GetSkillTime()
+
+	if skillCooldown > 0 then
+		local cooldown = skillCooldown
+		local cooldownPercentage = math.Clamp(cooldown / skillInstance.SkillCD, 0, 1)
+
+		draw.NoTexture()
+		surface.SetDrawColor(0, 0, 0, 200)
+
+		local cooldownMat = skillRectCooldown
+
+		if active then
+			cooldownMat = skillRectActiveCooldown
+		end
+
+		surface.SetMaterial(cooldownMat)
+		local cooldownSize = !active and skillSize * cooldownPercentage or screenScaleW(70) * cooldownPercentage
+		local cooldownX = finalX + (skillSize - cooldownSize) / 2
+		local cooldownY = finalY + (skillSize - cooldownSize) / 2
+		surface.DrawTexturedRect(cooldownX, cooldownY, cooldownSize, cooldownSize)
+		-- NSCOP.Utils.DrawCircle(x - (skillSize / 2), y - (skillSize / 2), (skillSize / 2.5) * cooldownPercentage, 32)
+	end
+
+	if active then
+        surface.SetMaterial(arrow)
+        surface.SetDrawColor(255, 255, 255, 128)
+		surface.DrawTexturedRect(finalX + screenScaleW(56), finalY + screenScaleH(8), screenScaleW(16), screenScaleH(8))
+
+		finalMat = skillRectActive
+	end
+	surface.SetMaterial(finalMat)
+	surface.SetDrawColor(255, 255, 255, 255)
+	surface.DrawTexturedRect(finalX, finalY, skillSize, skillSize)
+
+	local skillButton = self:GetSkillButton(skillIndex)
+
+	if not skillButton then return end
+	---@cast skillButton integer
+
+	-- local keyName = input.GetKeyName(skillButton)
+	-- draw.SimpleTextOutlined(keyName, "NSCOP_Main", x - skillSize / 2, y - skillSize / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(97, 89, 73))
+end
 
 function NSCOP.FightingStance:DrawHUD()
-	self:DrawPlayerData()
+	hudLeftPartX = screenScaleW(20)
+    hudLeftPartH = ScrH() - screenScaleH(270)
+    hudRightPartX = ScrW() - screenScaleW(20)
+    hudRightPartH = ScrH() - screenScaleH(270)
 
 	self:DrawSkills()
 end

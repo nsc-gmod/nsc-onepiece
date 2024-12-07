@@ -229,7 +229,7 @@ end
 
 ---Sets a skill into a slot. Duplicate skill instances are not supported and only the last instance will be kept
 ---@param slot integer Slot to set the skill into
----@param skill NSCOP.SkillId Skill Id to set into the slot
+---@param skill NSCOP.SkillId | number Skill Id to set into the slot
 ---@param shouldCreateInstance? boolean Don't create a skill instance automatically
 function NSCOP.FightingStance:SetSkillIntoSlot(slot, skill, shouldCreateInstance)
 	if shouldCreateInstance == nil then
